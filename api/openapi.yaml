@@ -1291,6 +1291,19 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Job' }
+  /jobs/{jobId}/download:
+    get:
+      tags: [Export]
+      summary: 작업 결과 파일 다운로드
+      operationId: downloadJobResult
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: 파일 (Content-Disposition attachment)
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
   /jobs/{jobId}:
     get:
       operationId: getJob
@@ -1630,6 +1643,7 @@ components:
         body: { type: string }
         edited_by: { type: string, format: uuid }
         edited_at: { type: string, format: date-time }
+        current: { type: boolean, description: 현재 내용이면 true }
 
     TimelineItem:
       type: object
@@ -1732,6 +1746,7 @@ components:
         id: { type: string, enum: [kakao, naver, maplibre, google] }
         public_key: { type: [string, 'null'], description: 도메인/번들ID 제한된 클라이언트 키 }
         style_url: { type: [string, 'null'], format: uri, description: MapLibre 스타일 JSON }
+        style_url_dark: { type: [string, 'null'], format: uri, description: 다크 모드 스타일 JSON }
         attribution: { type: string }
         search_provider: { type: string, enum: [kakao, naver, google, osm] }
 
