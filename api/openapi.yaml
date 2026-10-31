@@ -1,0 +1,1872 @@
+openapi: 3.1.0
+info:
+  title: Mappin API
+  version: 0.1.0
+  summary: 저장한 장소(POI)와 메모·태그·카테고리·공유를 다루는 공통 API (Web / iOS / Android)
+  description: |
+    ## 공통 규약
+    - Base URL: `https://api.mappin.app/v1`
+    - 인증: `Authorization: Bearer <access_token>` (JWT, 15분). 갱신은 `POST /auth/refresh`.
+    - ID: 클라이언트 생성 가능 UUIDv7. 생성 요청에 `id`를 넣으면 그 값을 사용(오프라인 생성/재시도 안전).
+    - 시간: RFC 3339 UTC (`2026-10-31T09:00:00Z`).
+    - 좌표: WGS84 십진수 `lat`(-90..90), `lng`(-180..180).
+    - 페이지네이션: 커서 기반 `?cursor=&limit=` → `{ items, next_cursor }`.
+    - 낙관적 잠금: 응답 `ETag: "<version>"`, 수정 시 `If-Match` 필수 → 불일치 시 412.
+    - 멱등성: 모든 POST는 `Idempotency-Key` 헤더 지원.
+    - 오류: RFC 9457 `application/problem+json`.
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.mappin.app/v1
+  - url: http://localhost:8080/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Me
+  - name: Places
+  - name: Notes
+  - name: Tags
+  - name: Categories
+  - name: Icons
+  - name: Map
+  - name: Geo
+  - name: Sharing
+  - name: Friends
+  - name: Sync
+  - name: Export
+
+paths:
+  # ───────────── Auth ─────────────
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [Auth]
+      summary: 이메일 회원가입
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, display_name, agreements]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 10, maxLength: 128 }
+                display_name: { type: string, minLength: 1, maxLength: 40 }
+                agreements: { $ref: '#/components/schemas/Agreements' }
+      responses:
+        '201': { $ref: '#/components/responses/AuthTokens' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /auth/login:
+    post:
+      operationId: login
+      tags: [Auth]
+      summary: 이메일 로그인
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, client]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                client: { $ref: '#/components/schemas/ClientInfo' }
+      responses:
+        '200': { $ref: '#/components/responses/AuthTokens' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /auth/oauth/{provider}:
+    post:
+      operationId: oauthLogin
+      tags: [Auth]
+      summary: 소셜 로그인 (OIDC id_token 또는 authorization code + PKCE 교환)
+      description: 모바일은 네이티브 SDK로 받은 id_token/access_token, 웹은 code + code_verifier 전달. 신규 사용자면 가입 처리(agreements 필요 시 428 반환).
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema: { type: string, enum: [google, apple, kakao, naver] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [client]
+              properties:
+                id_token: { type: string }
+                access_token: { type: string }
+                code: { type: string }
+                code_verifier: { type: string }
+                redirect_uri: { type: string, format: uri }
+                nonce: { type: string }
+                agreements: { $ref: '#/components/schemas/Agreements' }
+                client: { $ref: '#/components/schemas/ClientInfo' }
+      responses:
+        '200': { $ref: '#/components/responses/AuthTokens' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '428':
+          description: 신규 가입 — 약관 동의 필요
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [Auth]
+      summary: 토큰 갱신 (refresh 토큰 회전)
+      description: 웹은 HttpOnly 쿠키 `mp_rt` + `X-CSRF-Token`, 모바일은 body의 refresh_token 사용.
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/AuthTokens' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [Auth]
+      summary: 현재 세션 로그아웃
+      responses:
+        '204': { description: OK }
+  /auth/password/forgot:
+    post:
+      operationId: forgotPassword
+      tags: [Auth]
+      summary: 비밀번호 재설정 메일 발송
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: 항상 202 (계정 존재 여부 노출 방지) }
+  /auth/password/reset:
+    post:
+      operationId: resetPassword
+      tags: [Auth]
+      summary: 비밀번호 재설정
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, new_password]
+              properties:
+                token: { type: string }
+                new_password: { type: string, minLength: 10 }
+      responses:
+        '204': { description: OK }
+        '400': { $ref: '#/components/responses/Problem' }
+  /auth/email/verify:
+    post:
+      operationId: verifyEmail
+      tags: [Auth]
+      summary: 이메일 인증
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '204': { description: OK }
+
+  # ───────────── Me ─────────────
+  /me:
+    get:
+      operationId: getMe
+      tags: [Me]
+      summary: 내 프로필
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+    patch:
+      operationId: updateMe
+      tags: [Me]
+      summary: 프로필 수정
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name: { type: string, maxLength: 40 }
+                handle: { type: string, pattern: '^[a-z0-9_.]{3,20}$' }
+                avatar_url: { type: [string, 'null'], format: uri }
+                locale: { type: string }
+                timezone: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+    delete:
+      operationId: deleteAccount
+      tags: [Me]
+      summary: 회원 탈퇴 (앱 내 계정 삭제 — App Store 요구사항)
+      description: 즉시 로그인 불가, 공유 회수. 유예기간(7일) 후 모든 데이터 하드 삭제.
+      responses:
+        '202': { description: 삭제 예약됨 }
+  /me/sessions:
+    get:
+      operationId: listSessions
+      tags: [Me]
+      summary: 로그인된 기기 목록
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Session' }
+  /me/sessions/{sessionId}:
+    delete:
+      operationId: revokeSession
+      tags: [Me]
+      summary: 특정 기기 로그아웃
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: OK }
+  /me/identities:
+    get:
+      operationId: listIdentities
+      tags: [Me]
+      summary: 연결된 소셜 계정
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        provider: { type: string, enum: [google, apple, kakao, naver] }
+                        email: { type: [string, 'null'] }
+                        linked_at: { type: string, format: date-time }
+
+  # ───────────── Places ─────────────
+  /places:
+    get:
+      operationId: listPlaces
+      tags: [Places]
+      summary: 내(및 공유받은) 장소 조회 — 지도 범위·필터
+      parameters:
+        - name: bbox
+          in: query
+          description: '"west,south,east,north" (lng,lat,lng,lat)'
+          schema: { type: string, example: '126.90,37.50,127.10,37.60' }
+        - name: near
+          in: query
+          description: '"lat,lng,radius_m" 반경 검색'
+          schema: { type: string, example: '37.5446,127.0559,1000' }
+        - name: category_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: include_subcategories
+          in: query
+          schema: { type: boolean, default: true }
+        - name: uncategorized
+          in: query
+          schema: { type: boolean }
+        - name: tag
+          in: query
+          description: 태그 ID (반복 가능)
+          style: form
+          explode: true
+          schema: { type: array, items: { type: string, format: uuid } }
+        - name: tag_mode
+          in: query
+          schema: { type: string, enum: [any, all], default: any }
+        - name: q
+          in: query
+          description: 제목·주소·메모 키워드
+          schema: { type: string }
+        - name: scope
+          in: query
+          schema: { type: string, enum: [own, shared, all], default: own }
+        - name: share_id
+          in: query
+          description: 특정 공유 레이어만
+          schema: { type: string, format: uuid }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [updated_desc, created_desc, title_asc, distance], default: updated_desc }
+        - name: deleted
+          in: query
+          description: true면 휴지통 목록
+          schema: { type: boolean, default: false }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PlaceSummary' }
+                  next_cursor: { type: [string, 'null'] }
+    post:
+      operationId: createPlace
+      tags: [Places]
+      summary: 장소 저장
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlaceCreate' }
+      responses:
+        '201':
+          description: Created
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Place' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /places/{placeId}:
+    parameters:
+      - $ref: '#/components/parameters/PlaceId'
+    get:
+      operationId: getPlace
+      tags: [Places]
+      summary: 장소 상세 (태그, 최근 메모, 내 권한 포함)
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Place' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updatePlace
+      tags: [Places]
+      summary: 장소 수정 (이름, 위치, 아이콘, 카테고리 등)
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlaceUpdate' }
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Place' }
+        '412': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deletePlace
+      tags: [Places]
+      summary: 휴지통으로 이동 (30일 후 영구 삭제)
+      responses:
+        '204': { description: OK }
+  /places/{placeId}/restore:
+    post:
+      operationId: restorePlace
+      tags: [Places]
+      summary: 휴지통에서 복원
+      parameters:
+        - $ref: '#/components/parameters/PlaceId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Place' }
+  /places/{placeId}/timeline:
+    get:
+      operationId: getPlaceTimeline
+      tags: [Places]
+      summary: 장소 타임라인 (메모 + 변경 이벤트 시간순 병합)
+      parameters:
+        - $ref: '#/components/parameters/PlaceId'
+        - name: types
+          in: query
+          style: form
+          explode: false
+          schema: { type: array, items: { type: string, enum: [note, event] } }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/TimelineItem' }
+                  next_cursor: { type: [string, 'null'] }
+  /places/{placeId}/tags/{tagId}:
+    parameters:
+      - $ref: '#/components/parameters/PlaceId'
+      - $ref: '#/components/parameters/TagId'
+    put:
+      operationId: addPlaceTag
+      tags: [Places, Tags]
+      summary: 장소에 태그 부착 (tagged_at 기록, 멱등)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlaceTag' }
+    delete:
+      operationId: removePlaceTag
+      tags: [Places, Tags]
+      summary: 태그 해제
+      responses:
+        '204': { description: OK }
+  /places/{placeId}/copy:
+    post:
+      operationId: copyPlace
+      tags: [Places, Sharing]
+      summary: 공유받은 장소를 내 장소로 복사
+      parameters:
+        - $ref: '#/components/parameters/PlaceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_id: { type: [string, 'null'], format: uuid }
+                include_notes: { type: boolean, default: false }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Place' }
+  /places/batch:
+    post:
+      operationId: batchPlaces
+      tags: [Places]
+      summary: 일괄 작업 (카테고리 이동, 태그 부착/해제, 삭제)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [place_ids, action]
+              properties:
+                place_ids:
+                  type: array
+                  maxItems: 500
+                  items: { type: string, format: uuid }
+                action: { type: string, enum: [move_category, add_tags, remove_tags, delete, restore] }
+                category_id: { type: [string, 'null'], format: uuid }
+                tag_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  succeeded: { type: array, items: { type: string, format: uuid } }
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        reason: { type: string }
+
+  # ───────────── Notes ─────────────
+  /places/{placeId}/notes:
+    parameters:
+      - $ref: '#/components/parameters/PlaceId'
+    get:
+      operationId: listNotes
+      tags: [Notes]
+      summary: 메모 목록 (noted_at 내림차순)
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Note' }
+                  next_cursor: { type: [string, 'null'] }
+    post:
+      operationId: createNote
+      tags: [Notes]
+      summary: 메모 추가 (타임라인에 쌓임)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Note' }
+  /notes/{noteId}:
+    parameters:
+      - $ref: '#/components/parameters/NoteId'
+    patch:
+      operationId: updateNote
+      tags: [Notes]
+      summary: 메모 수정 (이전 내용은 리비전으로 보존)
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body: { type: string, minLength: 1, maxLength: 10000 }
+                is_private: { type: boolean }
+                noted_at: { type: string, format: date-time }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Note' }
+        '412': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteNote
+      tags: [Notes]
+      summary: 메모 삭제
+      responses:
+        '204': { description: OK }
+  /notes/{noteId}/revisions:
+    get:
+      operationId: listNoteRevisions
+      tags: [Notes]
+      summary: 메모 수정 이력
+      parameters:
+        - $ref: '#/components/parameters/NoteId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/NoteRevision' }
+
+  # ───────────── Tags ─────────────
+  /tags:
+    get:
+      operationId: listTags
+      tags: [Tags]
+      summary: 내 태그 목록 (사용 횟수 포함)
+      parameters:
+        - name: q
+          in: query
+          description: 자동완성 접두어
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Tag' }
+    post:
+      operationId: createTag
+      tags: [Tags]
+      summary: 태그 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                id: { type: string, format: uuid }
+                name: { type: string, minLength: 1, maxLength: 30 }
+                color: { $ref: '#/components/schemas/HexColor' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tag' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /tags/{tagId}:
+    parameters:
+      - $ref: '#/components/parameters/TagId'
+    patch:
+      operationId: updateTag
+      tags: [Tags]
+      summary: 태그 이름/색 변경
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 30 }
+                color: { $ref: '#/components/schemas/HexColor' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tag' }
+    delete:
+      operationId: deleteTag
+      tags: [Tags]
+      summary: 태그 삭제 (모든 장소에서 해제)
+      responses:
+        '204': { description: OK }
+  /tags/{tagId}/merge:
+    post:
+      operationId: mergeTag
+      tags: [Tags]
+      summary: 다른 태그로 병합
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [into_tag_id]
+              properties:
+                into_tag_id: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tag' }
+
+  # ───────────── Categories ─────────────
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [Categories]
+      summary: 카테고리 트리
+      parameters:
+        - name: format
+          in: query
+          schema: { type: string, enum: [tree, flat], default: tree }
+        - name: scope
+          in: query
+          schema: { type: string, enum: [own, shared, all], default: own }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Category' }
+    post:
+      operationId: createCategory
+      tags: [Categories]
+      summary: 카테고리 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryWrite' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+  /categories/{categoryId}:
+    parameters:
+      - $ref: '#/components/parameters/CategoryId'
+    patch:
+      operationId: updateCategory
+      tags: [Categories]
+      summary: 카테고리 수정 (이름, 아이콘, 색, 부모 이동)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryWrite' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '409':
+          description: 순환 참조 (자기 하위로 이동)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+    delete:
+      operationId: deleteCategory
+      tags: [Categories]
+      summary: 카테고리 삭제
+      parameters:
+        - name: places
+          in: query
+          description: 소속 장소 처리 방식
+          schema: { type: string, enum: [move_to_parent, uncategorize, delete], default: move_to_parent }
+      responses:
+        '204': { description: OK }
+  /categories/reorder:
+    post:
+      operationId: reorderCategories
+      tags: [Categories]
+      summary: 형제 카테고리 순서 변경
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent_id, ordered_ids]
+              properties:
+                parent_id: { type: [string, 'null'], format: uuid }
+                ordered_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '204': { description: OK }
+
+  # ───────────── Icons ─────────────
+  /icons:
+    get:
+      operationId: listIcons
+      tags: [Icons]
+      summary: 시스템 아이콘 카탈로그 (CDN 캐시 가능)
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version: { type: string }
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Icon' }
+
+  # ───────────── Map ─────────────
+  /map/config:
+    get:
+      operationId: getMapConfig
+      tags: [Map]
+      summary: 클라이언트 지도 설정 (지역별 공급자, 공개 키, 스타일) — 앱 재배포 없이 공급자 전환
+      security: []
+      parameters:
+        - name: platform
+          in: query
+          required: true
+          schema: { type: string, enum: [web, ios, android] }
+        - name: app_version
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MapConfig' }
+  /map/clusters:
+    get:
+      operationId: getClusters
+      tags: [Map]
+      summary: 서버 측 클러스터 (장소가 많은 계정용)
+      parameters:
+        - name: bbox
+          in: query
+          required: true
+          schema: { type: string }
+        - name: zoom
+          in: query
+          required: true
+          schema: { type: number, minimum: 0, maximum: 22 }
+        - name: category_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: tag
+          in: query
+          style: form
+          explode: true
+          schema: { type: array, items: { type: string, format: uuid } }
+        - name: scope
+          in: query
+          schema: { type: string, enum: [own, shared, all], default: own }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clusters:
+                    type: array
+                    items: { $ref: '#/components/schemas/Cluster' }
+                  places:
+                    type: array
+                    description: 클러스터되지 않은 개별 장소
+                    items: { $ref: '#/components/schemas/PlaceSummary' }
+
+  # ───────────── Geo (외부 공급자 프록시) ─────────────
+  /geo/search:
+    get:
+      operationId: geoSearch
+      tags: [Geo]
+      summary: 장소/주소 검색 (지역 공급자로 프록시, 응답 비저장)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: near
+          in: query
+          description: '"lat,lng" 결과 정렬 기준점'
+          schema: { type: string }
+        - name: provider
+          in: query
+          description: 생략 시 지역 기본 공급자
+          schema: { type: string, enum: [kakao, naver, google, osm] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider: { type: string }
+                  attribution: { type: string }
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PlaceCandidate' }
+                  has_more: { type: boolean }
+        '429': { $ref: '#/components/responses/Problem' }
+  /geo/reverse:
+    get:
+      operationId: reverseGeocode
+      tags: [Geo]
+      summary: 좌표 → 주소 (공공 주소 API 우선)
+      parameters:
+        - { name: lat, in: query, required: true, schema: { type: number } }
+        - { name: lng, in: query, required: true, schema: { type: number } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Address' }
+  /geo/provider-place/{provider}/{externalId}:
+    get:
+      operationId: getProviderPlace
+      tags: [Geo]
+      summary: 외부 장소 상세 실시간 조회 (영업시간·전화 등, 저장하지 않음)
+      parameters:
+        - { name: provider, in: path, required: true, schema: { type: string, enum: [kakao, naver, google, osm] } }
+        - { name: externalId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider: { type: string }
+                  external_id: { type: string }
+                  name: { type: string }
+                  phone: { type: [string, 'null'] }
+                  category_label: { type: [string, 'null'] }
+                  deeplink_url: { type: string, format: uri, description: 공급자 앱/웹 상세 페이지 }
+                  attribution: { type: string }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  # ───────────── Sharing ─────────────
+  /shares:
+    get:
+      operationId: listShares
+      tags: [Sharing]
+      summary: 내가 만든 공유 목록
+      parameters:
+        - name: target_type
+          in: query
+          schema: { type: string, enum: [place, category] }
+        - name: target_id
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Share' }
+    post:
+      operationId: createShare
+      tags: [Sharing]
+      summary: 공유 생성 (사용자/이메일 초대/링크)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ShareCreate' }
+      responses:
+        '201':
+          description: Created. 링크 공유면 `link_url`이 이번 응답에서만 포함됨.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Share' }
+  /shares/{shareId}:
+    parameters:
+      - $ref: '#/components/parameters/ShareId'
+    patch:
+      operationId: updateShare
+      tags: [Sharing]
+      summary: 권한/만료 변경
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permission: { type: string, enum: [viewer, editor] }
+                expires_at: { type: [string, 'null'], format: date-time }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Share' }
+    delete:
+      operationId: deleteShare
+      tags: [Sharing]
+      summary: 공유 회수 (받은 사람은 '공유 나가기'로 동일 엔드포인트 사용)
+      responses:
+        '204': { description: OK }
+  /shares/{shareId}/rotate-link:
+    post:
+      operationId: rotateShareLink
+      tags: [Sharing]
+      summary: 링크 토큰 재발급 (기존 링크 무효화)
+      parameters:
+        - $ref: '#/components/parameters/ShareId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Share' }
+  /shares/{shareId}/accept:
+    post:
+      operationId: acceptShare
+      tags: [Sharing]
+      summary: 받은 공유 수락 (내 지도 레이어에 추가)
+      parameters:
+        - $ref: '#/components/parameters/ShareId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Share' }
+  /shared-with-me:
+    get:
+      operationId: listSharedWithMe
+      tags: [Sharing]
+      summary: 공유받은 목록 (레이어)
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, accepted, all], default: all }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Share' }
+  /public/shares/{token}:
+    get:
+      operationId: getPublicShare
+      tags: [Sharing]
+      summary: 링크 공유 열람 (로그인 불필요, 읽기 전용, 비공개 메모 제외)
+      security: []
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicShareView' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '410':
+          description: 만료/회수됨
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  # ───────────── Friends ─────────────
+  /friends:
+    get:
+      operationId: listFriends
+      tags: [Friends]
+      summary: 친구 목록
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/UserPublic' }
+  /friends/requests:
+    get:
+      operationId: listFriendRequests
+      tags: [Friends]
+      summary: 받은/보낸 친구 요청
+      parameters:
+        - name: direction
+          in: query
+          schema: { type: string, enum: [incoming, outgoing], default: incoming }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/FriendRequest' }
+    post:
+      operationId: createFriendRequest
+      tags: [Friends]
+      summary: 친구 요청 (handle 또는 이메일)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                handle: { type: string }
+                email: { type: string, format: email }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FriendRequest' }
+  /friends/requests/{userId}/{action}:
+    post:
+      operationId: respondFriendRequest
+      tags: [Friends]
+      summary: 친구 요청 수락/거절
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: action, in: path, required: true, schema: { type: string, enum: [accept, decline] } }
+      responses:
+        '204': { description: OK }
+  /friends/{userId}:
+    delete:
+      operationId: deleteFriend
+      tags: [Friends]
+      summary: 친구 삭제 (해당 사용자와의 공유도 회수 옵션)
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: revoke_shares, in: query, schema: { type: boolean, default: true } }
+      responses:
+        '204': { description: OK }
+
+  # ───────────── Sync ─────────────
+  /sync/changes:
+    get:
+      operationId: getChanges
+      tags: [Sync]
+      summary: 변경 피드 (오프라인 캐시 동기화)
+      parameters:
+        - name: cursor
+          in: query
+          description: 이전 응답의 next_cursor. 최초 동기화는 생략.
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 500 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [changes, next_cursor, has_more]
+                properties:
+                  changes:
+                    type: array
+                    items: { $ref: '#/components/schemas/Change' }
+                  next_cursor: { type: string }
+                  has_more: { type: boolean }
+        '410':
+          description: 커서 만료 — 전체 재동기화 필요
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /sync/push:
+    post:
+      operationId: pushMutations
+      tags: [Sync]
+      summary: 오프라인 변경 일괄 업로드
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mutations]
+              properties:
+                mutations:
+                  type: array
+                  maxItems: 200
+                  items: { $ref: '#/components/schemas/Mutation' }
+      responses:
+        '200':
+          description: 항목별 결과
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        client_mutation_id: { type: string }
+                        status: { type: string, enum: [applied, duplicate, conflict, rejected] }
+                        entity: { type: object, additionalProperties: true }
+                        problem: { $ref: '#/components/schemas/Problem' }
+
+  # ───────────── Export / Import ─────────────
+  /export:
+    post:
+      operationId: createExport
+      tags: [Export]
+      summary: 내 데이터 내보내기 작업 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [format]
+              properties:
+                format: { type: string, enum: [geojson, csv, gpx, kml, full_json] }
+                category_id: { type: string, format: uuid }
+      responses:
+        '202':
+          description: 작업 생성
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Job' }
+  /import:
+    post:
+      operationId: createImport
+      tags: [Export]
+      summary: 가져오기 (GeoJSON/CSV/KML/GPX 업로드)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                category_id: { type: string, format: uuid }
+                dry_run: { type: boolean, default: false }
+      responses:
+        '202':
+          description: 작업 생성
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Job' }
+  /jobs/{jobId}:
+    get:
+      operationId: getJob
+      tags: [Export]
+      summary: 비동기 작업 상태
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Job' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PlaceId: { name: placeId, in: path, required: true, schema: { type: string, format: uuid } }
+    NoteId: { name: noteId, in: path, required: true, schema: { type: string, format: uuid } }
+    TagId: { name: tagId, in: path, required: true, schema: { type: string, format: uuid } }
+    CategoryId: { name: categoryId, in: path, required: true, schema: { type: string, format: uuid } }
+    ShareId: { name: shareId, in: path, required: true, schema: { type: string, format: uuid } }
+    Cursor: { name: cursor, in: query, schema: { type: string } }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: 마지막으로 받은 ETag (version)
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema: { type: string, maxLength: 128 }
+
+  responses:
+    Problem:
+      description: 오류 (RFC 9457)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    AuthTokens:
+      description: 로그인 성공
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AuthTokens' }
+
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri-reference, example: 'https://api.mappin.app/problems/version-conflict' }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string, description: '기계 판독용 코드 (예: PLACE_VERSION_CONFLICT)' }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+
+    HexColor:
+      type: [string, 'null']
+      pattern: '^#[0-9A-Fa-f]{6}$'
+
+    LatLng:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+
+    Agreements:
+      type: object
+      required: [terms, privacy, location]
+      properties:
+        terms: { type: boolean, const: true, description: 서비스 이용약관 }
+        privacy: { type: boolean, const: true, description: 개인정보 수집·이용 }
+        location: { type: boolean, const: true, description: 위치기반서비스 이용약관 }
+        marketing: { type: boolean, default: false }
+        age_14_or_over: { type: boolean, const: true }
+
+    ClientInfo:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [web, ios, android] }
+        device_name: { type: string }
+        app_version: { type: string }
+
+    AuthTokens:
+      type: object
+      required: [access_token, expires_in, user]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string, const: Bearer }
+        expires_in: { type: integer, example: 900 }
+        refresh_token:
+          type: string
+          description: 모바일에만 body로 반환. 웹은 HttpOnly 쿠키로 설정.
+        user: { $ref: '#/components/schemas/Me' }
+
+    Me:
+      type: object
+      required: [id, display_name, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: [string, 'null'], format: email }
+        email_verified: { type: boolean }
+        display_name: { type: string }
+        handle: { type: [string, 'null'] }
+        avatar_url: { type: [string, 'null'], format: uri }
+        locale: { type: string }
+        timezone: { type: string }
+        has_password: { type: boolean }
+        stats:
+          type: object
+          properties:
+            places: { type: integer }
+            categories: { type: integer }
+            tags: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    UserPublic:
+      type: object
+      required: [id, display_name]
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
+        handle: { type: [string, 'null'] }
+        avatar_url: { type: [string, 'null'], format: uri }
+
+    Session:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        client_type: { type: string, enum: [web, ios, android] }
+        device_name: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        last_used_at: { type: string, format: date-time }
+        current: { type: boolean }
+
+    Address:
+      type: object
+      properties:
+        road: { type: [string, 'null'], example: '서울특별시 성동구 성수이로 78' }
+        jibun: { type: [string, 'null'], example: '서울특별시 성동구 성수동2가 315-61' }
+        postal_code: { type: [string, 'null'] }
+        region_1: { type: [string, 'null'], description: 시/도 }
+        region_2: { type: [string, 'null'], description: 시/군/구 }
+        region_3: { type: [string, 'null'], description: 읍/면/동 }
+        country_code: { type: [string, 'null'], example: KR }
+        source: { type: string, enum: [juso, vworld, kakao, naver, google, osm, user] }
+
+    ProviderRef:
+      type: object
+      required: [provider, external_id]
+      properties:
+        provider: { type: string, enum: [kakao, naver, google, osm] }
+        external_id: { type: string }
+
+    IconRef:
+      type: object
+      description: 최종 표시 아이콘 (장소 지정 > 카테고리 기본 > 시스템 기본 규칙을 서버가 해석해 함께 제공)
+      properties:
+        key: { type: string, example: food.ramen }
+        color: { type: string, example: '#E4572E' }
+        source: { type: string, enum: [place, category, default] }
+
+    PlaceSummary:
+      type: object
+      description: 지도 마커/목록용 경량 표현
+      required: [id, title, lat, lng, icon, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        icon: { $ref: '#/components/schemas/IconRef' }
+        category_id: { type: [string, 'null'], format: uuid }
+        tag_ids:
+          type: array
+          items: { type: string, format: uuid }
+        note_count: { type: integer }
+        last_noted_at: { type: [string, 'null'], format: date-time }
+        owner_id: { type: string, format: uuid }
+        via_share_id: { type: [string, 'null'], format: uuid, description: 공유받은 장소면 공유 ID }
+        distance_m: { type: [number, 'null'] }
+        updated_at: { type: string, format: date-time }
+
+    Place:
+      type: object
+      required: [id, owner_id, title, location, icon, version, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid }
+        owner: { $ref: '#/components/schemas/UserPublic' }
+        title: { type: string }
+        location: { $ref: '#/components/schemas/LatLng' }
+        accuracy_m: { type: [number, 'null'] }
+        altitude_m: { type: [number, 'null'] }
+        address: { $ref: '#/components/schemas/Address' }
+        address_detail: { type: [string, 'null'] }
+        icon_key: { type: [string, 'null'], description: 장소에 직접 지정한 아이콘 }
+        color: { $ref: '#/components/schemas/HexColor' }
+        icon: { $ref: '#/components/schemas/IconRef' }
+        category_id: { type: [string, 'null'], format: uuid }
+        category_path:
+          type: array
+          description: 루트→리프 카테고리 이름 (breadcrumb)
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              name: { type: string }
+        tags:
+          type: array
+          items: { $ref: '#/components/schemas/PlaceTag' }
+        rating: { type: [integer, 'null'], minimum: 1, maximum: 5 }
+        visited_at: { type: [string, 'null'], format: date-time }
+        source: { type: string, enum: [manual, search, current_location, import, shared_copy] }
+        provider_refs:
+          type: array
+          items: { $ref: '#/components/schemas/ProviderRef' }
+        recent_notes:
+          type: array
+          maxItems: 3
+          items: { $ref: '#/components/schemas/Note' }
+        note_count: { type: integer }
+        permission: { type: string, enum: [owner, editor, viewer] }
+        via_share_id: { type: [string, 'null'], format: uuid }
+        version: { type: integer }
+        created_at: { type: string, format: date-time, description: 저장한 시간 }
+        updated_at: { type: string, format: date-time }
+        deleted_at: { type: [string, 'null'], format: date-time }
+
+    PlaceCreate:
+      type: object
+      required: [title, location]
+      properties:
+        id: { type: string, format: uuid, description: 클라이언트 생성 UUIDv7 (선택) }
+        title: { type: string, minLength: 1, maxLength: 100 }
+        location: { $ref: '#/components/schemas/LatLng' }
+        accuracy_m: { type: number }
+        altitude_m: { type: number }
+        address_detail: { type: string }
+        resolve_address: { type: boolean, default: true, description: 서버가 공공 주소 API로 주소 채움 }
+        icon_key: { type: string }
+        color: { $ref: '#/components/schemas/HexColor' }
+        category_id: { type: [string, 'null'], format: uuid }
+        tag_ids:
+          type: array
+          items: { type: string, format: uuid }
+        new_tags:
+          type: array
+          description: 없는 태그는 이름으로 즉시 생성
+          items: { type: string, maxLength: 30 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        visited_at: { type: string, format: date-time }
+        source: { type: string, enum: [manual, search, current_location, import], default: manual }
+        provider_ref: { $ref: '#/components/schemas/ProviderRef' }
+        first_note: { $ref: '#/components/schemas/NoteCreate' }
+
+    PlaceUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1, maxLength: 100 }
+        location: { $ref: '#/components/schemas/LatLng' }
+        accuracy_m: { type: [number, 'null'] }
+        address_detail: { type: [string, 'null'] }
+        resolve_address: { type: boolean, description: 위치 변경 시 주소 재계산 }
+        icon_key: { type: [string, 'null'] }
+        color: { $ref: '#/components/schemas/HexColor' }
+        category_id: { type: [string, 'null'], format: uuid }
+        rating: { type: [integer, 'null'], minimum: 1, maximum: 5 }
+        visited_at: { type: [string, 'null'], format: date-time }
+
+    PlaceTag:
+      type: object
+      required: [tag_id, name, tagged_at]
+      properties:
+        tag_id: { type: string, format: uuid }
+        name: { type: string }
+        color: { $ref: '#/components/schemas/HexColor' }
+        tagged_at: { type: string, format: date-time, description: 태그한 시간 }
+        tagged_by: { type: string, format: uuid }
+
+    Note:
+      type: object
+      required: [id, place_id, author_id, body, noted_at, revision, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        place_id: { type: string, format: uuid }
+        author_id: { type: string, format: uuid }
+        author: { $ref: '#/components/schemas/UserPublic' }
+        body: { type: string }
+        is_private: { type: boolean }
+        noted_at: { type: string, format: date-time, description: 기록 시점 (사용자 지정 가능) }
+        revision: { type: integer }
+        edited: { type: boolean }
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              url: { type: string, format: uri }
+              mime_type: { type: string }
+              width: { type: integer }
+              height: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    NoteCreate:
+      type: object
+      required: [body]
+      properties:
+        id: { type: string, format: uuid }
+        body: { type: string, minLength: 1, maxLength: 10000 }
+        is_private: { type: boolean, default: false }
+        noted_at: { type: string, format: date-time }
+
+    NoteRevision:
+      type: object
+      properties:
+        revision: { type: integer }
+        body: { type: string }
+        edited_by: { type: string, format: uuid }
+        edited_at: { type: string, format: date-time }
+
+    TimelineItem:
+      type: object
+      required: [kind, at]
+      properties:
+        kind: { type: string, enum: [note, event] }
+        at: { type: string, format: date-time }
+        note: { $ref: '#/components/schemas/Note' }
+        event:
+          type: object
+          properties:
+            id: { type: integer }
+            type:
+              type: string
+              enum: [place.created, place.updated, place.moved, place.deleted, place.restored, icon.changed, category.changed, tag.added, tag.removed, note.added, note.edited, note.deleted]
+            actor: { $ref: '#/components/schemas/UserPublic' }
+            data: { type: object, additionalProperties: true }
+
+    Tag:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        color: { $ref: '#/components/schemas/HexColor' }
+        place_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    Category:
+      type: object
+      required: [id, name, sort_order]
+      properties:
+        id: { type: string, format: uuid }
+        owner_id: { type: string, format: uuid }
+        parent_id: { type: [string, 'null'], format: uuid }
+        name: { type: string }
+        icon_key: { type: [string, 'null'] }
+        color: { $ref: '#/components/schemas/HexColor' }
+        sort_order: { type: integer }
+        place_count: { type: integer, description: 하위 포함 }
+        shared: { type: boolean, description: 활성 공유 존재 여부 }
+        children:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+        updated_at: { type: string, format: date-time }
+
+    CategoryWrite:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        parent_id: { type: [string, 'null'], format: uuid }
+        name: { type: string, minLength: 1, maxLength: 50 }
+        icon_key: { type: [string, 'null'] }
+        color: { $ref: '#/components/schemas/HexColor' }
+        sort_order: { type: integer }
+
+    Icon:
+      type: object
+      properties:
+        key: { type: string }
+        group_key: { type: string }
+        label: { type: string }
+        svg_url: { type: string, format: uri }
+
+    MapConfig:
+      type: object
+      required: [regions, default_provider]
+      properties:
+        default_provider: { $ref: '#/components/schemas/ProviderConfig' }
+        regions:
+          type: array
+          description: 위에서부터 첫 매칭 bbox의 공급자 사용
+          items:
+            type: object
+            properties:
+              name: { type: string, example: KR }
+              bbox:
+                type: array
+                minItems: 4
+                maxItems: 4
+                items: { type: number }
+                example: [124.5, 33.0, 132.0, 38.9]
+              provider: { $ref: '#/components/schemas/ProviderConfig' }
+        clustering:
+          type: object
+          properties:
+            server_threshold: { type: integer, example: 5000, description: 장소 수가 이 이상이면 /map/clusters 사용 }
+            radius_px: { type: integer, example: 60 }
+        initial_camera:
+          type: object
+          properties:
+            center: { $ref: '#/components/schemas/LatLng' }
+            zoom: { type: number }
+
+    ProviderConfig:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string, enum: [kakao, naver, maplibre, google] }
+        public_key: { type: [string, 'null'], description: 도메인/번들ID 제한된 클라이언트 키 }
+        style_url: { type: [string, 'null'], format: uri, description: MapLibre 스타일 JSON }
+        attribution: { type: string }
+        search_provider: { type: string, enum: [kakao, naver, google, osm] }
+
+    Cluster:
+      type: object
+      properties:
+        id: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        count: { type: integer }
+        top_icon: { $ref: '#/components/schemas/IconRef' }
+        expansion_zoom: { type: number }
+        bbox:
+          type: array
+          items: { type: number }
+
+    PlaceCandidate:
+      type: object
+      description: 외부 검색 결과 (저장 대상 아님 — 사용자가 확정하면 PlaceCreate로 저장)
+      properties:
+        provider_ref: { $ref: '#/components/schemas/ProviderRef' }
+        name: { type: string }
+        location: { $ref: '#/components/schemas/LatLng' }
+        address: { type: [string, 'null'] }
+        category_label: { type: [string, 'null'] }
+        suggested_icon_key: { type: [string, 'null'] }
+        distance_m: { type: [number, 'null'] }
+        already_saved_place_id: { type: [string, 'null'], format: uuid, description: 같은 provider_ref로 이미 저장한 장소 }
+
+    ShareCreate:
+      type: object
+      required: [target_type, target_id, grantee]
+      properties:
+        target_type: { type: string, enum: [place, category] }
+        target_id: { type: string, format: uuid }
+        include_descendants: { type: boolean, default: true }
+        grantee:
+          oneOf:
+            - type: object
+              required: [type, user_id]
+              properties:
+                type: { const: user }
+                user_id: { type: string, format: uuid }
+            - type: object
+              required: [type, email]
+              properties:
+                type: { const: email }
+                email: { type: string, format: email }
+            - type: object
+              required: [type]
+              properties:
+                type: { const: link }
+        permission: { type: string, enum: [viewer, editor], default: viewer }
+        expires_at: { type: string, format: date-time }
+        message: { type: string, maxLength: 200 }
+
+    Share:
+      type: object
+      required: [id, target_type, target_id, permission, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        owner: { $ref: '#/components/schemas/UserPublic' }
+        target_type: { type: string, enum: [place, category] }
+        target_id: { type: string, format: uuid }
+        target_title: { type: string }
+        include_descendants: { type: boolean }
+        grantee_type: { type: string, enum: [user, email, link] }
+        grantee: { $ref: '#/components/schemas/UserPublic' }
+        grantee_email: { type: [string, 'null'] }
+        permission: { type: string, enum: [viewer, editor] }
+        status: { type: string, enum: [pending, accepted, expired, revoked] }
+        link_url: { type: [string, 'null'], format: uri, description: 생성/재발급 응답에서만 원문 포함 }
+        place_count: { type: integer }
+        message: { type: [string, 'null'] }
+        expires_at: { type: [string, 'null'], format: date-time }
+        accepted_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+
+    PublicShareView:
+      type: object
+      properties:
+        share:
+          type: object
+          properties:
+            target_type: { type: string, enum: [place, category] }
+            title: { type: string }
+            owner: { $ref: '#/components/schemas/UserPublic' }
+            message: { type: [string, 'null'] }
+            expires_at: { type: [string, 'null'], format: date-time }
+        categories:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+        places:
+          type: array
+          items: { $ref: '#/components/schemas/Place' }
+        map_config: { $ref: '#/components/schemas/MapConfig' }
+
+    FriendRequest:
+      type: object
+      properties:
+        user: { $ref: '#/components/schemas/UserPublic' }
+        direction: { type: string, enum: [incoming, outgoing] }
+        status: { type: string, enum: [pending, accepted, blocked] }
+        created_at: { type: string, format: date-time }
+
+    Change:
+      type: object
+      required: [entity, id, op, seq]
+      properties:
+        seq: { type: string, description: 단조 증가 변경 번호 }
+        entity: { type: string, enum: [place, note, tag, place_tag, category, share] }
+        id: { type: string, description: 'place_tag는 "<place_id>:<tag_id>"' }
+        op: { type: string, enum: [upsert, delete] }
+        scope: { type: string, enum: [own, shared] }
+        data: { type: object, additionalProperties: true, description: op=upsert일 때 엔티티 전체 }
+
+    Mutation:
+      type: object
+      required: [client_mutation_id, entity, op]
+      properties:
+        client_mutation_id: { type: string, description: 멱등 키 }
+        entity: { type: string, enum: [place, note, tag, place_tag, category] }
+        op: { type: string, enum: [create, update, delete] }
+        id: { type: string }
+        base_version: { type: integer, description: update 시 클라이언트가 알던 version }
+        data: { type: object, additionalProperties: true }
+        occurred_at: { type: string, format: date-time, description: 오프라인에서 실제 발생 시각 }
+
+    Job:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [export, import] }
+        status: { type: string, enum: [queued, running, succeeded, failed] }
+        progress: { type: number, minimum: 0, maximum: 1 }
+        result_url: { type: [string, 'null'], format: uri }
+        summary: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }

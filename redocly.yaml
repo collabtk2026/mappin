@@ -1,0 +1,8 @@
+extends:
+  - recommended
+rules:
+  # 공통 오류 응답(Problem)은 게이트웨이에서 일괄 처리 — 개별 4xx 명시는 필요한 곳만
+  operation-4xx-response: off
+  tag-description: off
+  no-server-example.com: off
+  info-license-strict: off
