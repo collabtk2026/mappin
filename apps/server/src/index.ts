@@ -1,5 +1,5 @@
 import { buildApp } from './app.js';
-import { loadConfig } from './config.js';
+import { loadConfig, loadDotEnv } from './config.js';
 import { createSql } from './db.js';
 import { TokenService } from './lib/auth.js';
 import { KakaoGeo, NominatimGeo } from './lib/geo.js';
@@ -8,6 +8,7 @@ import { GoogleVerifier, KakaoVerifier } from './lib/oauth.js';
 import { migrate } from './migrate.js';
 import { purgeDeletedUsers } from './maintenance.js';
 
+loadDotEnv();
 const config = loadConfig();
 const sql = createSql(config.databaseUrl);
 await migrate(sql);

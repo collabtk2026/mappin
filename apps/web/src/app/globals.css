@@ -4,6 +4,7 @@
   --bg: #f5f6f8;
   --surface: #ffffff;
   --surface-glass: rgba(255, 255, 255, 0.86);
+  --surface-panel: rgba(255, 255, 255, 0.95);
   --surface-muted: #f0f2f5;
   --surface-hover: #e9ecf0;
   --border: rgba(15, 23, 42, 0.08);
@@ -44,6 +45,7 @@
     --bg: #0e1013;
     --surface: #16191e;
     --surface-glass: rgba(22, 25, 30, 0.82);
+    --surface-panel: rgba(22, 25, 30, 0.95);
     --surface-muted: #1e2228;
     --surface-hover: #262b33;
     --border: rgba(255, 255, 255, 0.08);
@@ -68,6 +70,7 @@
   --bg: #0e1013;
   --surface: #16191e;
   --surface-glass: rgba(22, 25, 30, 0.82);
+  --surface-panel: rgba(22, 25, 30, 0.95);
   --surface-muted: #1e2228;
   --surface-hover: #262b33;
   --border: rgba(255, 255, 255, 0.08);
@@ -231,7 +234,7 @@ a {
 
 /* ── Chips ── */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chips.scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chips.scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
 .chips.scroll::-webkit-scrollbar { display: none; }
 .chip {
   display: inline-flex;
@@ -326,9 +329,10 @@ button.chip:hover { background: var(--surface-hover); color: var(--text); }
   z-index: 30;
   animation: panel-in var(--t-panel) var(--ease);
 }
+.panel.glass, .sheet.glass { background: var(--surface-panel); }
 @keyframes panel-in { from { opacity: 0; transform: translateX(-12px); } }
-.panel-head { padding: 12px 12px 0; display: grid; gap: 10px; }
-.panel-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 12px 16px; }
+.panel-head { padding: 12px 12px 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.panel-body { flex: 1; min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 12px 16px; }
 .panel-body::-webkit-scrollbar { width: 10px; }
 .panel-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
 
@@ -568,3 +572,5 @@ button.badge:hover { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
 }
+
+.form-head { position: sticky; top: -4px; z-index: 2; padding: 8px 12px 10px; margin: 0 -12px; background: var(--surface); box-shadow: 0 1px 0 var(--border); }

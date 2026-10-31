@@ -2,7 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createSql, type Sql } from './db.js';
-import { loadConfig } from './config.js';
+import { loadConfig, loadDotEnv } from './config.js';
 
 const MIGRATIONS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../db/migrations');
 
@@ -22,6 +22,7 @@ export async function migrate(sql: Sql, log: (msg: string) => void = console.log
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  loadDotEnv();
   const sql = createSql(loadConfig().databaseUrl);
   migrate(sql)
     .then(() => sql.end())

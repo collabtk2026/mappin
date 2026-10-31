@@ -16,6 +16,7 @@ export const onTokenChange = (l: (t: string | null) => void) => {
 
 /** HttpOnly refresh 쿠키로 access token 재발급 (동시 호출은 하나로 합침) */
 export function refreshAccess(): Promise<string | null> {
+  if (typeof document !== 'undefined' && !document.cookie.includes('mp_has_session=')) return Promise.resolve(null);
   refreshing ??= fetch('/v1/auth/refresh', { method: 'POST', headers: { 'content-type': 'application/json', 'x-mappin-csrf': '1' }, body: '{}' })
     .then(async (r) => {
       if (!r.ok) return null;

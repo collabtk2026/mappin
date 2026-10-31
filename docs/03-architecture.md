@@ -58,9 +58,8 @@ mappin/
 │  ├─ api-client/              # openapi.yaml로 생성한 타입·fetch 클라이언트 (openapi-typescript + openapi-fetch)
 │  ├─ domain/                  # 도메인 타입, 아이콘·색 결정 규칙, 필터 로직, 검증(Zod)
 │  ├─ map-core/                # MapProvider 어댑터 인터페이스 + 공통 클러스터링 (supercluster)
-│  ├─ map-web-kakao/           # 웹 어댑터: Kakao JS SDK
-│  ├─ map-web-maplibre/        # 웹 어댑터: MapLibre GL JS
 │  └─ map-native/              # RN 어댑터 (Kakao/Naver/MapLibre) — P1
+│  (P0: 웹 어댑터는 apps/web/src/map/{maplibre,kakao,pins}.ts — 모바일 착수 시 패키지로 분리)
 └─ docs/
 ```
 

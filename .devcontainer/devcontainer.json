@@ -1,0 +1,14 @@
+{
+  "name": "Mappin",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "forwardPorts": [3000, 8080],
+  "portsAttributes": {
+    "3000": { "label": "Mappin Web", "onAutoForward": "openBrowser" },
+    "8080": { "label": "Mappin API" }
+  },
+  "postCreateCommand": "corepack enable && pnpm install && pnpm db:migrate",
+  "postStartCommand": "pnpm dev",
+  "customizations": { "vscode": { "extensions": ["dbaeumer.vscode-eslint", "42Crunch.vscode-openapi"] } }
+}

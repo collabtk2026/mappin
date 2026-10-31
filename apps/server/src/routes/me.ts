@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Ctx } from '../app.js';
 import { conflict } from '../lib/errors.js';
 import { parse, uuid } from '../lib/validate.js';
-import { meJson } from './auth.js';
+import { clearAuthCookies, meJson } from './auth.js';
 
 export function meRoutes(app: FastifyInstance, ctx: Ctx) {
   app.get('/me', async (req) => {
@@ -43,7 +43,7 @@ export function meRoutes(app: FastifyInstance, ctx: Ctx) {
       await tx`UPDATE shares SET revoked_at = now()
                 WHERE (owner_id = ${userId} OR grantee_user_id = ${userId}) AND revoked_at IS NULL`;
     });
-    reply.clearCookie('mp_rt', { path: '/v1/auth' });
+    clearAuthCookies(reply);
     return reply.code(202).send();
   });
 

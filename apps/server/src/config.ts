@@ -12,13 +12,21 @@ export interface Config {
   googleClientIds: string[];
 }
 
+/** 저장소 루트의 .env를 읽는다 (있을 때만, 이미 설정된 환경변수가 우선) */
+export function loadDotEnv() {
+  const file = new URL('../../../.env', import.meta.url);
+  try {
+    process.loadEnvFile(file);
+  } catch {}
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const prod = env.NODE_ENV === 'production';
   const jwtSecret = env.JWT_SECRET ?? (prod ? '' : 'dev-only-secret-change-me-dev-only-secret');
   if (jwtSecret.length < 32) throw new Error('JWT_SECRET must be at least 32 characters');
   return {
     port: Number(env.PORT ?? 8080),
-    databaseUrl: env.DATABASE_URL ?? 'postgres://postgres@localhost:5432/mappin',
+    databaseUrl: env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/mappin',
     jwtSecret,
     accessTtlSec: Number(env.ACCESS_TTL_SEC ?? 900),
     refreshTtlDays: Number(env.REFRESH_TTL_DAYS ?? 30),

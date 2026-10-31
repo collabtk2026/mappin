@@ -1,5 +1,7 @@
 # Mappin
 
+![Mappin](docs/screenshots/04-map-list.png)
+
 내가 저장한 장소(POI)와 그곳에 쌓인 기록(메모 히스토리, 태그, 아이콘, 카테고리)을 지도 위에서 다시 보고, 지인과 공유하는 서비스.
 **웹 우선**으로 만들고, 같은 API와 도메인 모델로 **iOS·Android**까지 확장한다.
 
@@ -13,6 +15,7 @@
 | 04 | [API 개요](docs/04-api.md) | 공통 규약, 엔드포인트 요약, 핵심 흐름, 클라이언트 생성 |
 | 05 | [로드맵·법규·리스크](docs/05-roadmap-and-compliance.md) | 단계별 일정, 위치정보법 등 체크리스트, 리스크 대응 |
 | 06 | [디자인 시스템](docs/06-design-system.md) | "조용한 지도, 선명한 핀" — 원칙, 색·타이포·모션 토큰, 레이아웃, 컴포넌트, 접근성 |
+| 07 | [P0 구현 결과](docs/07-p0-report.md) | 구현 기능, 디자인 적용, 테스트 결과(서버 22 · E2E 20), 스크린샷, 남은 한계 |
 
 ## 계약과 뼈대
 
@@ -30,12 +33,60 @@
 4. **카테고리(계층·1개) + 태그(다중·부착 시각 기록) + 메모 타임라인(리비전 보존) + 장소 이벤트 로그**
 5. **공유는 장소나 카테고리 단위**로, 사용자·이메일·링크에 `viewer`/`editor` 권한을 준다. 받은 사람은 내 지도 위에 레이어로 겹쳐 본다.
 
-## 검증
+## 실행
+
+DB를 띄웁니다 (PostgreSQL 16 + PostGIS):
 
 ```bash
-npx @redocly/cli lint api/openapi.yaml
+docker compose up -d db
 ```
 
+환경변수 파일을 만듭니다:
+
 ```bash
-pnpm db:migrate
+cp .env.example .env
+```
+
+의존성 설치 후 마이그레이션을 적용합니다:
+
+```bash
+pnpm install && pnpm db:migrate
+```
+
+API(8080)와 웹(3000)을 함께 실행합니다:
+
+```bash
+pnpm dev
+```
+
+GitHub Codespaces: 저장소 페이지 → **Code → Codespaces → Create codespace** (DB·마이그레이션·서버 자동 실행)
+
+## 구조
+
+| 경로 | 설명 |
+|---|---|
+| `apps/server` | Fastify API (인증·장소·메모·태그·카테고리·공유·내보내기) + 통합 테스트 |
+| `apps/web` | Next.js 웹 (지도 앱, 공유 링크 SSR 페이지) — 지도 어댑터는 `src/map/` (MapLibre·Kakao) |
+| `packages/api-client` | OpenAPI에서 생성한 타입 + fetch 클라이언트 (웹·RN 공용) |
+| `packages/map-core` | 지도 공급자 독립 인터페이스 |
+| `scripts/e2e.mjs` | Playwright E2E (스크린샷 → `e2e-artifacts/`) |
+
+## 검증
+
+API 서버 통합 테스트 (PostGIS DB 필요, `TEST_DATABASE_URL`):
+
+```bash
+pnpm --filter @mappin/server test
+```
+
+브라우저 E2E (서버가 떠 있는 상태):
+
+```bash
+pnpm e2e
+```
+
+API 명세 검증:
+
+```bash
+pnpm lint:api
 ```

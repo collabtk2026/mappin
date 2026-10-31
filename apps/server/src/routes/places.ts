@@ -299,7 +299,8 @@ export function placeRoutes(app: FastifyInstance, ctx: Ctx) {
     if (a.version !== ifMatch) throw preconditionFailed();
 
     const [cur] = await sql<any[]>`
-      SELECT title, icon_key, color, category_id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
+      SELECT title, icon_key, color, category_id, address_detail, rating, accuracy_m, visited_at,
+             ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
         FROM places WHERE id = ${id}`;
     const moved = body.location && (body.location.lat !== cur.lat || body.location.lng !== cur.lng);
     const address = moved && body.resolve_address !== false ? await safeReverse(ctx, body.location!.lat, body.location!.lng) : null;
@@ -326,7 +327,10 @@ export function placeRoutes(app: FastifyInstance, ctx: Ctx) {
         const [c] = body.category_id ? await tx<{ name: string }[]>`SELECT name FROM categories WHERE id = ${body.category_id}` : [];
         await addEvent(tx, id, userId, 'category.changed', { from: cur.category_id, to: body.category_id, name: c?.name ?? null });
       }
-      const other = Object.keys(rest).filter((k) => !['icon_key', 'color', 'category_id'].includes(k) && (rest as any)[k] !== undefined);
+      const norm = (v: unknown) => (v instanceof Date ? v.toISOString() : v == null ? null : typeof v === 'string' && /^\d{4}-\d\d-\d\dT/.test(v) ? new Date(v).toISOString() : v);
+      const other = Object.keys({ ...rest, ...(visited_at !== undefined ? { visited_at } : {}) }).filter(
+        (k) => !['icon_key', 'color', 'category_id'].includes(k) && (body as any)[k] !== undefined && norm((body as any)[k]) !== norm(cur[k]),
+      );
       if (other.length) {
         const data: Record<string, unknown> = { fields: other };
         if (body.title !== undefined && body.title !== cur.title) data.title = { from: cur.title, to: body.title };

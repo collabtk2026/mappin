@@ -1476,6 +1476,7 @@ components:
 
     IconRef:
       type: object
+      required: [key, color, source]
       description: 최종 표시 아이콘 (장소 지정 > 카테고리 기본 > 시스템 기본 규칙을 서버가 해석해 함께 제공)
       properties:
         key: { type: string, example: food.ramen }
@@ -1505,7 +1506,7 @@ components:
 
     Place:
       type: object
-      required: [id, owner_id, title, location, icon, version, created_at, updated_at]
+      required: [id, owner_id, title, location, icon, tags, category_path, provider_refs, recent_notes, note_count, permission, version, created_at, updated_at]
       properties:
         id: { type: string, format: uuid }
         owner_id: { type: string, format: uuid }

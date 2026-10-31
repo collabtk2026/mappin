@@ -9,6 +9,11 @@ import { parse } from '../lib/validate.js';
 
 const REFRESH_COOKIE = 'mp_rt';
 const CSRF_HEADER = 'x-mappin-csrf';
+export const SESSION_HINT = 'mp_has_session';
+export function clearAuthCookies(reply: FastifyReply) {
+  reply.clearCookie(REFRESH_COOKIE, { path: '/v1/auth' });
+  reply.clearCookie(SESSION_HINT, { path: '/' });
+}
 
 const agreements = z.object({
   terms: z.literal(true),
@@ -66,6 +71,8 @@ async function tokensResponse(ctx: Ctx, reply: FastifyReply, userId: string, ses
       path: '/v1/auth',
       maxAge: ctx.config.refreshTtlDays * 86400,
     });
+    // JS가 읽을 수 있는 세션 힌트 (값 없음) — 비로그인 상태에서 불필요한 refresh 호출 방지
+    reply.setCookie(SESSION_HINT, '1', { path: '/', sameSite: 'lax', secure: ctx.config.cookieSecure, maxAge: ctx.config.refreshTtlDays * 86400 });
   }
   return {
     access_token: access,
@@ -198,7 +205,7 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx) {
     if (!s) {
       // 이미 회전된 토큰을 다시 쓰면 탈취로 보고 세션 전체를 폐기
       await ctx.sql`UPDATE sessions SET revoked_at = now() WHERE previous_token_hash = ${h} AND revoked_at IS NULL`;
-      if (clientType === 'web') reply.clearCookie(REFRESH_COOKIE, { path: '/v1/auth' });
+      if (clientType === 'web') clearAuthCookies(reply);
       throw unauthorized('로그인이 만료됐어요. 다시 로그인해 주세요');
     }
     const next = randomToken();
@@ -210,7 +217,7 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx) {
   app.post('/auth/logout', async (req, reply) => {
     const user = await ctx.auth(req);
     await ctx.sql`UPDATE sessions SET revoked_at = now() WHERE id = ${user.sessionId}`;
-    reply.clearCookie(REFRESH_COOKIE, { path: '/v1/auth' });
+    clearAuthCookies(reply);
     return reply.code(204).send();
   });
 

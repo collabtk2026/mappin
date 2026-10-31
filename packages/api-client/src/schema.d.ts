@@ -1021,11 +1021,11 @@ export interface components {
         /** @description 최종 표시 아이콘 (장소 지정 > 카테고리 기본 > 시스템 기본 규칙을 서버가 해석해 함께 제공) */
         IconRef: {
             /** @example food.ramen */
-            key?: string;
+            key: string;
             /** @example #E4572E */
-            color?: string;
+            color: string;
             /** @enum {string} */
-            source?: "place" | "category" | "default";
+            source: "place" | "category" | "default";
         };
         /** @description 지도 마커/목록용 경량 표현 */
         PlaceSummary: {
@@ -1071,22 +1071,22 @@ export interface components {
             /** Format: uuid */
             category_id?: string | null;
             /** @description 루트→리프 카테고리 이름 (breadcrumb) */
-            category_path?: {
+            category_path: {
                 /** Format: uuid */
                 id?: string;
                 name?: string;
             }[];
-            tags?: components["schemas"]["PlaceTag"][];
+            tags: components["schemas"]["PlaceTag"][];
             rating?: number | null;
             /** Format: date-time */
             visited_at?: string | null;
             /** @enum {string} */
             source?: "manual" | "search" | "current_location" | "import" | "shared_copy";
-            provider_refs?: components["schemas"]["ProviderRef"][];
-            recent_notes?: components["schemas"]["Note"][];
-            note_count?: number;
+            provider_refs: components["schemas"]["ProviderRef"][];
+            recent_notes: components["schemas"]["Note"][];
+            note_count: number;
             /** @enum {string} */
-            permission?: "owner" | "editor" | "viewer";
+            permission: "owner" | "editor" | "viewer";
             /** Format: uuid */
             via_share_id?: string | null;
             version: number;

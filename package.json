@@ -4,7 +4,7 @@
   "packageManager": "pnpm@10.28.0",
   "engines": { "node": ">=22" },
   "scripts": {
-    "dev": "pnpm -r --parallel --filter @mappin/server --filter @mappin/web dev",
+    "dev": "pnpm --parallel --filter @mappin/server --filter @mappin/web dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
