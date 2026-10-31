@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.next/
+.env
+.env.local
+*.log
+apps/web/public/demo-basemap/
+e2e-artifacts/
+coverage/
+next-env.d.ts
+*.tsbuildinfo

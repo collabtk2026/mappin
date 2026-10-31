@@ -12,13 +12,14 @@
 | 03 | [아키텍처](docs/03-architecture.md) | 기술 스택, 모노레포, 지도 어댑터, 인증, 공유 권한, 동기화, 플랫폼별 접근 계획 |
 | 04 | [API 개요](docs/04-api.md) | 공통 규약, 엔드포인트 요약, 핵심 흐름, 클라이언트 생성 |
 | 05 | [로드맵·법규·리스크](docs/05-roadmap-and-compliance.md) | 단계별 일정, 위치정보법 등 체크리스트, 리스크 대응 |
+| 06 | [디자인 시스템](docs/06-design-system.md) | "조용한 지도, 선명한 핀" — 원칙, 색·타이포·모션 토큰, 레이아웃, 컴포넌트, 접근성 |
 
 ## 계약과 뼈대
 
 | 경로 | 설명 |
 |---|---|
 | [`api/openapi.yaml`](api/openapi.yaml) | **단일 API 계약** (OpenAPI 3.1, 64개 엔드포인트) — 웹·RN·Swift·Kotlin 클라이언트를 모두 여기서 생성한다 |
-| [`db/schema.sql`](db/schema.sql) | PostgreSQL 16 + PostGIS 초기 스키마 |
+| [`db/migrations/`](db/migrations) | PostgreSQL 16 + PostGIS 스키마 (순서대로 적용되는 SQL 마이그레이션) |
 | [`packages/map-core/src/index.ts`](packages/map-core/src/index.ts) | 지도 공급자 독립 인터페이스 (`MapProvider`, `MapHandle`, `MarkerSpec`, 아이콘 결정 규칙) |
 
 ## 핵심 결정 요약
@@ -36,5 +37,5 @@ npx @redocly/cli lint api/openapi.yaml
 ```
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql
+pnpm db:migrate
 ```
