@@ -1,0 +1,10 @@
+**/node_modules
+**/.next
+**/dist
+.git
+.logs
+e2e-artifacts
+docs/screenshots
+deploy/.env
+deploy/backups
+*.log

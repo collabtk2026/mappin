@@ -9,3 +9,5 @@ e2e-artifacts/
 coverage/
 *.tsbuildinfo
 .logs/
+deploy/.env
+deploy/backups/

@@ -1,0 +1,25 @@
+# DOMAIN이 도메인이면 Let's Encrypt 인증서를 자동 발급/갱신한다.
+# 도메인 없이 IP로 시험할 때는 DOMAIN=:80 (HTTP, COOKIE_SECURE=false 필요)
+{$DOMAIN} {
+	encode zstd gzip
+
+	@api path /v1/* /healthz
+	handle @api {
+		reverse_proxy api:8080
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "geolocation=(self), camera=(), microphone=()"
+		X-Frame-Options DENY
+		-Server
+	}
+	log {
+		output stdout
+		format console
+	}
+}

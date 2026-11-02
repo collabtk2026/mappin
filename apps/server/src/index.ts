@@ -3,7 +3,7 @@ import { loadConfig, loadDotEnv } from './config.js';
 import { createSql } from './db.js';
 import { TokenService } from './lib/auth.js';
 import { KakaoGeo, NominatimGeo } from './lib/geo.js';
-import { MemoryMailer } from './lib/mailer.js';
+import { MemoryMailer, SmtpMailer } from './lib/mailer.js';
 import { GoogleVerifier, KakaoVerifier } from './lib/oauth.js';
 import { migrate } from './migrate.js';
 import { purgeDeletedUsers } from './maintenance.js';
@@ -19,7 +19,7 @@ const app = await buildApp(
     config,
     tokens: new TokenService(config.jwtSecret, config.accessTtlSec),
     geo: config.kakaoRestKey ? new KakaoGeo(config.kakaoRestKey) : new NominatimGeo(),
-    mailer: new MemoryMailer((m) => console.log(m)),
+    mailer: config.smtpUrl ? new SmtpMailer(config.smtpUrl, config.mailFrom) : new MemoryMailer((m) => console.log(m)),
     oauth: {
       ...(config.googleClientIds.length ? { google: new GoogleVerifier(config.googleClientIds) } : {}),
       kakao: new KakaoVerifier(),

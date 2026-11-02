@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module';
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import cookie from '@fastify/cookie';
+import rateLimit from '@fastify/rate-limit';
 import type { Sql } from './db.js';
 import type { Config } from './config.js';
 import { TokenService, authenticate, type AuthUser } from './lib/auth.js';
@@ -36,6 +37,22 @@ export interface Ctx extends Deps {
 export async function buildApp(deps: Deps, opts: { logger?: boolean } = {}): Promise<FastifyInstance> {
   const app = Fastify({ logger: opts.logger ?? false, trustProxy: true, bodyLimit: 2 * 1024 * 1024 });
   await app.register(cookie);
+  if (deps.config.rateLimit) {
+    // IP당 기본 300회/분, 로그인·가입·메일 발송(무차별 대입 대상)과 외부 지도 프록시는 더 엄격하게
+    const group = (url: string) =>
+      /^\/v1\/auth\/(login|signup|oauth|password|email)/.test(url) ? 'auth' : url.startsWith('/v1/geo/') ? 'geo' : 'api';
+    await app.register(rateLimit, {
+      max: (req) => ({ auth: 20, geo: 60, api: 300 })[group(req.url)],
+      timeWindow: '1 minute',
+      keyGenerator: (req) => `${req.ip}:${group(req.url)}`,
+      allowList: (req) => req.url === '/healthz',
+      errorResponseBuilder: (_req, ctx) => ({
+        statusCode: 429,
+        code: 'RATE_LIMITED',
+        message: `요청이 너무 많아요. ${Math.ceil(ctx.ttl / 1000)}초 후에 다시 시도해 주세요`,
+      }),
+    });
+  }
 
   app.setErrorHandler((err: any, req, reply) => {
     if (err instanceof HttpError) {

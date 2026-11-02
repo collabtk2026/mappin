@@ -1,0 +1,24 @@
+# Mappin API (Fastify + tsx)
+FROM node:22-bookworm-slim AS base
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/server/package.json apps/server/
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prod --filter @mappin/server...
+
+FROM base AS runner
+ENV NODE_ENV=production PORT=8080
+COPY --from=deps /app /app
+COPY db/migrations db/migrations
+COPY apps/server/src apps/server/src
+COPY apps/server/tsconfig.json apps/server/
+COPY tsconfig.base.json ./
+WORKDIR /app/apps/server
+USER node
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s CMD node -e "fetch('http://127.0.0.1:8080/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+# 시작할 때 마이그레이션을 자동 적용한 뒤 서버를 띄운다 (src/index.ts)
+CMD ["node", "--import", "tsx", "src/index.ts"]

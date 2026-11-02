@@ -16,6 +16,7 @@
 | 05 | [로드맵·법규·리스크](docs/05-roadmap-and-compliance.md) | 단계별 일정, 위치정보법 등 체크리스트, 리스크 대응 |
 | 06 | [디자인 시스템](docs/06-design-system.md) | "조용한 지도, 선명한 핀" — 원칙, 색·타이포·모션 토큰, 레이아웃, 컴포넌트, 접근성 |
 | 07 | [P0 구현 결과](docs/07-p0-report.md) | 구현 기능, 디자인 적용, 테스트 결과(서버 22 · E2E 20), 스크린샷, 남은 한계 |
+| 08 | [개별 서버에 설치하기](docs/08-self-hosting.md) | Docker Compose(PostGIS·API·웹·Caddy HTTPS) 설치, 설정, 업데이트, 백업·복원, 문제 해결 |
 
 ## 계약과 뼈대
 
@@ -60,6 +61,12 @@ pnpm dev
 ```
 
 GitHub Codespaces: 저장소 페이지 → **Code → Codespaces → Create codespace** (DB·마이그레이션·서버 자동 실행)
+
+**운영 서버 설치** (Docker, 자동 HTTPS) → [docs/08-self-hosting.md](docs/08-self-hosting.md):
+
+```bash
+DOMAIN=map.example.com ./deploy/setup.sh
+```
 
 ## 구조
 

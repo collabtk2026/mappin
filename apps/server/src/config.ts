@@ -10,6 +10,9 @@ export interface Config {
   kakaoJsKey: string | null;
   kakaoRestKey: string | null;
   googleClientIds: string[];
+  smtpUrl: string | null;
+  mailFrom: string;
+  rateLimit: boolean;
 }
 
 /** 저장소 루트의 .env를 읽는다 (있을 때만, 이미 설정된 환경변수가 우선) */
@@ -31,10 +34,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     accessTtlSec: Number(env.ACCESS_TTL_SEC ?? 900),
     refreshTtlDays: Number(env.REFRESH_TTL_DAYS ?? 30),
     publicWebUrl: env.PUBLIC_WEB_URL ?? 'http://localhost:3000',
-    cookieSecure: prod,
+    // HTTPS 없이 IP로 시험할 때만 COOKIE_SECURE=false
+    cookieSecure: env.COOKIE_SECURE ? env.COOKIE_SECURE === 'true' : prod,
     mapStyle: env.MAP_STYLE === 'demo' ? 'demo' : 'openfreemap',
     kakaoJsKey: env.KAKAO_JS_KEY || null,
     kakaoRestKey: env.KAKAO_REST_KEY || null,
     googleClientIds: (env.GOOGLE_CLIENT_IDS ?? '').split(',').filter(Boolean),
+    smtpUrl: env.SMTP_URL || null,
+    mailFrom: env.MAIL_FROM ?? 'Mappin <no-reply@localhost>',
+    rateLimit: env.RATE_LIMIT !== 'off' && env.NODE_ENV !== 'test',
   };
 }
