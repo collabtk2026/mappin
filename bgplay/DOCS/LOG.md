@@ -58,6 +58,8 @@
 
 **남은 일**: 실기기 검증([TEST_PLAN.md](TEST_PLAN.md) §1·§2), 백그라운드 큐 진행 보강, iOS 잠금화면 저장, Android PiP.
 
+**커밋**: `e839e38` (브랜치 `ccr-94ee0a85-9h95lk`)
+
 ---
 
 ## 2026-11-03 #1 — Brave 연구 + Android/iOS 앱 1차 구현
