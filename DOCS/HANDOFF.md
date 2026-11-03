@@ -53,11 +53,12 @@
 
 | 커밋 | 내용 |
 |---|---|
+| `821e150` | 스토어 출시 검토(STORE_RELEASE), 인수인계(HANDOFF), AGENTS.md, D-12 |
 | `d8cfe72`, `230d285` | 환경 제약 정리(ENV_PENDING), 점검 스크립트 3개 |
 | `fed8802`, `e839e38` | DOCS 체계, 사례 조사, 빠른 저장·보관함, Media Session 폴리필 |
 | `b89133e` | Brave 연구, Android/iOS 1차 앱, `bgplay.js` |
 
-이 문서와 STORE_RELEASE.md를 추가한 커밋은 LOG #4에 있다.
+
 
 ---
 
