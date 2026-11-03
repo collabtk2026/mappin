@@ -1,3 +1,5 @@
+> **안내**: 이 `bgplay/` 디렉터리는 **Mappin(지도 앱)과 무관한 별개 프로젝트**입니다. Mappin 코드(`apps/`, `packages/`, `api/` 등)와 섞이지 않으며, 독립 저장소로 옮기는 중입니다([DOCS/LOG.md](DOCS/LOG.md) #5).
+
 # BgPlay — 백그라운드 재생 + 빠른 저장 YouTube / YouTube Music 플레이어 (Android · iOS)
 
 Brave 브라우저의 "백그라운드 동영상 재생" 구현과 비슷한 앱들(YTPro, NouTube 등)을 분석해서, 같은 구조를 **브라우저 포크 없이 앱으로** 만든 프로젝트입니다.
