@@ -150,6 +150,35 @@
   var lastSent = '';
   var lastPositionSentAt = 0;
 
+  if (isTop && !('mediaSession' in navigator)) {
+    // Android WebView 에는 Media Session API 가 없다(사례 조사: YTPro 도 폴리필).
+    // 최소 구현을 넣어 두면 YouTube 가 제목/아티스트/아트워크와 다음·이전 핸들러를 여기에 등록하고,
+    // 우리는 그걸 그대로 알림/잠금화면에 쓴다.
+    if (typeof window.MediaMetadata !== 'function') {
+      window.MediaMetadata = function MediaMetadata(init) {
+        init = init || {};
+        this.title = init.title || '';
+        this.artist = init.artist || '';
+        this.album = init.album || '';
+        this.artwork = init.artwork || [];
+      };
+    }
+    var polyMeta = null;
+    var poly = {
+      playbackState: 'none',
+      setActionHandler: function (action, handler) { handlers[action] = handler || null; schedule(); },
+      setPositionState: function () {},
+      setMicrophoneActive: function () {},
+      setCameraActive: function () {}
+    };
+    Object.defineProperty(poly, 'metadata', {
+      enumerable: true,
+      get: function () { return polyMeta; },
+      set: function (v) { polyMeta = v; schedule(); }
+    });
+    try { Object.defineProperty(navigator, 'mediaSession', { configurable: true, enumerable: true, value: poly }); } catch (e) {}
+  }
+
   if (isTop) {
     // 사이트가 등록한 Media Session 액션 핸들러를 기억해 두면 next/prev를
     // DOM 셀렉터에 의존하지 않고 사이트 자신의 로직으로 실행할 수 있다.

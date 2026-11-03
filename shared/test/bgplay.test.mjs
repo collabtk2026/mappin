@@ -197,6 +197,25 @@ await test('backgroundPlay=false: 위장/자동재개 없음 (사이트 기본 �
   await close();
 });
 
+await test('Media Session 이 없는 WebView(Android): 폴리필로 메타데이터·핸들러 수집', async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.route('http://bgplay.test/**', (r) => r.fulfill({ contentType: 'text/html', body: PAGE }));
+  await page.addInitScript(() => { delete Navigator.prototype.mediaSession; delete window.MediaMetadata; delete window.MediaSession; });
+  await page.addInitScript(HARNESS);
+  await page.addInitScript(`window.__BGPLAY_CONFIG = { backgroundPlay: true, platform: 'android' };`);
+  await page.addInitScript(SCRIPT);
+  await page.goto('http://bgplay.test/watch?v=test');
+  await page.evaluate(() => document.querySelector('video').play());
+  await sleep(300);
+  const s = await page.evaluate(() => __msgs.filter((m) => m.type === 'state').pop());
+  assert(s.title === 'Test Song' && s.artist === 'Test Artist' && s.artwork === 'https://example.invalid/l.jpg', JSON.stringify(s));
+  assert(s.canNext === true, 'canNext via polyfill handler');
+  await page.evaluate(() => __bgplay.command('next'));
+  assert((await page.evaluate(() => window.nextCalls)) === 1, 'next handler');
+  await context.close();
+});
+
 await browser.close();
 const failed = results.filter((r) => !r[0]).length;
 console.log(`\n${results.length - failed}/${results.length} passed`);

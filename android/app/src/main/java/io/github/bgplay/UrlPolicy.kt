@@ -23,6 +23,24 @@ object UrlPolicy {
         return host == "youtube.com" || host.endsWith(".youtube.com") || host == "youtu.be"
     }
 
+    private val videoId = Regex("^[A-Za-z0-9_-]{11}$")
+
+    /** core.js parseVideo 와 같은 규칙: watch?v= / youtu.be / shorts / live / embed. */
+    fun videoIdOf(url: String?): String? {
+        if (url == null) return null
+        val uri = Uri.parse(url)
+        if (!isYouTube(uri)) return null
+        val host = uri.host!!.lowercase()
+        val segs = uri.pathSegments
+        val id = when {
+            host == "youtu.be" -> segs.firstOrNull()
+            uri.isHierarchical && uri.getQueryParameter("v") != null -> uri.getQueryParameter("v")
+            segs.size >= 2 && segs[0] in setOf("shorts", "live", "embed", "v") -> segs[1]
+            else -> null
+        }
+        return id?.takeIf { videoId.matches(it) }
+    }
+
     /** 공유 텍스트("제목 https://youtu.be/xxx") 에서 첫 YouTube URL 추출. */
     fun extractYouTubeUrl(text: String?): String? {
         if (text == null) return null

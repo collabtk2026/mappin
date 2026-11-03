@@ -21,6 +21,10 @@ targets:
       # Android와 공유하는 주입 스크립트
       - path: ../shared/js/bgplay.js
         buildPhase: resources
+      # 보관함 UI (Android와 공유) — 폴더째 번들에 library/ 로 복사
+      - path: ../shared/web/library
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.bgplay

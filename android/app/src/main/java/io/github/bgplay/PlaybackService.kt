@@ -74,8 +74,9 @@ class PlaybackService : Service(), PlayerController.Listener {
         when (intent?.action) {
             ACTION_PLAY -> player.command("play")
             ACTION_PAUSE -> player.command("pause")
-            ACTION_NEXT -> player.command("next")
-            ACTION_PREV -> player.command("prev")
+            ACTION_NEXT -> player.skipNext()
+            ACTION_PREV -> player.skipPrev()
+            ACTION_SAVE -> player.quickSaveFromBackground()
             ACTION_CLOSE -> {
                 player.command("pause")
                 stopSelf()
@@ -130,7 +131,7 @@ class PlaybackService : Service(), PlayerController.Listener {
         var actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or
             PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_STOP
         if (info.durationMs > 0) actions = actions or PlaybackState.ACTION_SEEK_TO
-        if (info.canNext) actions = actions or PlaybackState.ACTION_SKIP_TO_NEXT
+        if (info.canNext || player.hasQueueNext) actions = actions or PlaybackState.ACTION_SKIP_TO_NEXT
         // "이전"은 핸들러가 없어도 처음으로 되감기로 동작한다.
         if (info.hasMedia) actions = actions or PlaybackState.ACTION_SKIP_TO_PREVIOUS
         val state = when {
@@ -138,7 +139,14 @@ class PlaybackService : Service(), PlayerController.Listener {
             info.hasMedia -> PlaybackState.STATE_PAUSED
             else -> PlaybackState.STATE_NONE
         }
-        return PlaybackState.Builder()
+        val b = PlaybackState.Builder()
+        // Android 13+ 미디어 컨트롤(잠금화면/알림)에 "＋ 임시 저장" 버튼
+        if (UrlPolicy.videoIdOf(info.url) != null) {
+            b.addCustomAction(
+                PlaybackState.CustomAction.Builder(CUSTOM_SAVE, getString(R.string.action_save), R.drawable.ic_action_save).build()
+            )
+        }
+        return b
             .setActions(actions)
             .setState(state, info.positionMs, info.rate, info.updatedAt)
             .build()
@@ -163,7 +171,7 @@ class PlaybackService : Service(), PlayerController.Listener {
         return Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_bgplay)
             .setContentTitle(info.title ?: getString(R.string.nothing_playing))
-            .setContentText(info.artist ?: "")
+            .setContentText(listOfNotNull(info.artist, player.queueName).joinToString(" · "))
             .setLargeIcon(artwork.get(info.artworkUrl))
             .setContentIntent(contentIntent())
             .setOngoing(info.playing)
@@ -173,6 +181,7 @@ class PlaybackService : Service(), PlayerController.Listener {
             .addAction(action(android.R.drawable.ic_media_previous, R.string.action_prev, ACTION_PREV))
             .addAction(playPause)
             .addAction(action(android.R.drawable.ic_media_next, R.string.action_next, ACTION_NEXT))
+            .addAction(action(R.drawable.ic_action_save, R.string.action_save, ACTION_SAVE))
             .addAction(action(android.R.drawable.ic_menu_close_clear_cancel, R.string.action_close, ACTION_CLOSE))
             .setStyle(
                 Notification.MediaStyle()
@@ -234,8 +243,11 @@ class PlaybackService : Service(), PlayerController.Listener {
     private inner class SessionCallback : MediaSession.Callback() {
         override fun onPlay() = player.command("play")
         override fun onPause() = player.command("pause")
-        override fun onSkipToNext() = player.command("next")
-        override fun onSkipToPrevious() = player.command("prev")
+        override fun onSkipToNext() = player.skipNext()
+        override fun onSkipToPrevious() = player.skipPrev()
+        override fun onCustomAction(action: String, extras: android.os.Bundle?) {
+            if (action == CUSTOM_SAVE) player.quickSaveFromBackground()
+        }
         override fun onSeekTo(pos: Long) = player.command("seekto", pos / 1000.0)
         override fun onStop() {
             player.command("pause")
@@ -258,6 +270,8 @@ class PlaybackService : Service(), PlayerController.Listener {
         private const val ACTION_NEXT = "io.github.bgplay.NEXT"
         private const val ACTION_PREV = "io.github.bgplay.PREV"
         private const val ACTION_CLOSE = "io.github.bgplay.CLOSE"
+        private const val ACTION_SAVE = "io.github.bgplay.SAVE"
+        private const val CUSTOM_SAVE = "save_to_inbox"
 
         fun stop(context: Context) {
             context.stopService(Intent(context, PlaybackService::class.java))
