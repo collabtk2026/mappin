@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BgPlay</string>
+    <string name="channel_name">재생 중</string>
+    <string name="channel_desc">백그라운드 재생 컨트롤</string>
+    <string name="action_prev">이전</string>
+    <string name="action_play">재생</string>
+    <string name="action_pause">일시정지</string>
+    <string name="action_next">다음</string>
+    <string name="action_close">닫기</string>
+    <string name="nothing_playing">재생 중인 항목 없음</string>
+    <string name="home_youtube">YouTube</string>
+    <string name="home_music">Music</string>
+    <string name="bg_on">BG 켬</string>
+    <string name="bg_off">BG 끔</string>
+    <string name="bg_toggled_on">백그라운드 재생 켬 (새로고침)</string>
+    <string name="bg_toggled_off">백그라운드 재생 끔 (새로고침)</string>
+</resources>
