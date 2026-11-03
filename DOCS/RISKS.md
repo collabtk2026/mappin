@@ -1,5 +1,7 @@
 # 배포·정책 리스크
 
+> 스토어 출시 관점의 상세 검토(조항별 체크, 사례, 대응 전략, 체크리스트)는 [STORE_RELEASE.md](STORE_RELEASE.md)에 있다.
+
 > 문서 목록: [README](README.md) · [작업 로그](LOG.md) · [전체 개요](OVERVIEW.md)
 
 ## 1. 배포와 정책 리스크

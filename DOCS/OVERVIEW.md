@@ -61,12 +61,16 @@ bgplay/
 
 ## 중요한 제약 (꼭 알아둘 것)
 
+- **스토어 출시**: 지금 형태로는 거의 불가능하다. 권장은 이중 트랙이다. 풀 기능은 스토어 밖, 스토어에는 재생을 공식 앱에 맡기는 "보관함 우선" 빌드([STORE_RELEASE.md](STORE_RELEASE.md), [DECISIONS D-12](DECISIONS.md)).
+
 - **2026년 1월부터 YouTube가 비 Premium 계정의 모바일 브라우저 백그라운드 재생을 서버 쪽에서 막는다.** 위장 레이어는 보장되지 않는다. Premium 계정의 백그라운드 재생을 OS 레이어로 받쳐 주는 것이 확실한 가치다([RESEARCH_BRAVE.md §3](RESEARCH_BRAVE.md)).
 - Premium 확인을 우회하는 기법(UA 위장, 스트림 추출, YouTube가 건 pause를 되돌리는 guard)은 넣지 않는다([DECISIONS D-03](DECISIONS.md)).
 - 스토어 배포는 위험하다(ProTube·Musi 삭제, Vanced C&D). 개인 사이드로드나 TestFlight를 전제로 한다([RISKS.md](RISKS.md)).
 - WebView 안에서 Google 로그인이 막힐 수 있다. 실기기에서 1순위로 확인해야 한다.
 
 ## 다음 단계
+
+> 전체 백로그(T-xx)와 점검 목록은 **[HANDOFF.md](HANDOFF.md)** §6–§7에 있다.
 
 > 환경 때문에 못 한 일(빌드, 실기기, 실제 YouTube 검증 등)과 실행 절차는 **[ENV_PENDING.md](ENV_PENDING.md)**에 정리돼 있다.
 

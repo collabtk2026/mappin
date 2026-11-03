@@ -74,3 +74,14 @@
   - 재생 WebView: Android는 `addWebMessageListener`의 origin 규칙(`*.youtube.com`), iOS는 `frameInfo`(메인 프레임 + YouTube 호스트)로 검증한다.
   - 보관함 WebView: Android는 `appassets.androidplatform.net` origin만, iOS는 `file:` 출처만 받는다. 다른 페이지로는 이동이 막혀 있다.
 - **참고**: NouTube는 브리지 토큰을 쓴다. 재생 WebView의 메시지는 재생 상태(표시용)뿐이라 위조돼도 영향이 작아 토큰은 보류했다.
+
+### D-12 스토어 심사 회피 기법을 쓰지 않고, 출시는 이중 트랙으로 (2026-11-03)
+- **결정**:
+  - 심사 중 기능 숨김, 출시 후 원격 플래그나 원격 스크립트로 기능 켜기, 정체를 숨기는 이름·설명, Enterprise 인증서 배포, 다른 계정으로 재출시를 하지 않는다.
+  - 스토어에는 백그라운드 위장 코드가 **바이너리에 없는** `store` 빌드(보관함 우선, 재생은 공식 앱으로 위임)를 내고, 풀 기능은 스토어 밖(사이드로드, TestFlight 내부)으로 쓴다.
+- **이유**:
+  - Apple 2.5.19·2.3.1 위반은 앱 하나가 아니라 **개발자 계정 해지**로 이어진다.
+  - YouTube 신고로 인한 사후 삭제 사례(ProTube, Musi, Kiwi)가 있다.
+  - 이번에 만든 핵심 기능(빠른 저장 → 분류)은 재생을 공식 앱에 맡겨도 그대로 쓸모가 있다.
+- **근거와 상세**: [STORE_RELEASE.md](STORE_RELEASE.md)
+- **상태**: 결정만 함. 구현은 HANDOFF T-20~T-25
