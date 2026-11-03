@@ -60,7 +60,7 @@
 
 ## 2. 플랫폼별 구현 상세
 
-### Android (`bgplay/android`, Kotlin, minSdk 26 / targetSdk 35, 의존성은 `androidx.webkit` 하나)
+### Android (`android`, Kotlin, minSdk 26 / targetSdk 35, 의존성은 `androidx.webkit` 하나)
 
 | 파일 | 역할 |
 |---|---|
@@ -77,7 +77,7 @@
 - BG를 끄면 일반 브라우저처럼 동작한다. `onStop`에서 정지하고 `webView.onPause()`를 부른 뒤 서비스를 종료한다.
 - Android 12 이상은 백그라운드 상태에서 포그라운드 서비스를 시작할 수 없다. 그래서 앱이 보일 때 재생이 시작되는 순간 서비스를 띄우고, 정지 중에도 유지한다(유휴 30분 후 종료).
 
-### iOS (`bgplay/ios`, Swift/UIKit, iOS 16+, XcodeGen)
+### iOS (`ios`, Swift/UIKit, iOS 16+, XcodeGen)
 
 | 파일 | 역할 |
 |---|---|

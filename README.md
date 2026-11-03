@@ -1,4 +1,4 @@
-> **안내**: 이 `bgplay/` 디렉터리는 **Mappin(지도 앱)과 무관한 별개 프로젝트**입니다. Mappin 코드(`apps/`, `packages/`, `api/` 등)와 섞이지 않으며, 독립 저장소로 옮기는 중입니다([DOCS/LOG.md](DOCS/LOG.md) #5).
+> **독립 저장소**: 이 저장소는 BgPlay만 담고 있습니다. 2026-11-03에 `collabtk2026/mappin` 저장소의 `bgplay/` 디렉터리에서 커밋 이력째 분리했습니다([DOCS/LOG.md](DOCS/LOG.md) #5). Mappin(지도 앱)과는 무관합니다.
 
 # BgPlay — 백그라운드 재생 + 빠른 저장 YouTube / YouTube Music 플레이어 (Android · iOS)
 
@@ -14,7 +14,7 @@ Brave 브라우저의 "백그라운드 동영상 재생" 구현과 비슷한 앱
 > ⚠️ 2026년 1월부터 YouTube가 비 Premium 계정의 모바일 브라우저 백그라운드 재생을 막고 있습니다. 개인 사이드로드 용도이며, 스토어 배포는 권장하지 않습니다([DOCS/RISKS.md](DOCS/RISKS.md)).
 
 ```
-bgplay/
+bgplay/  (저장소 루트)
 ├─ AGENTS.md / CLAUDE.md      # AI 작업 규칙: HANDOFF부터 읽기, 작업할 때마다 DOCS에 기록
 ├─ DOCS/                      # 문서: LOG(작업 로그), OVERVIEW(전체 개요), 주제별 문서
 ├─ shared/js/bgplay.js        # YouTube 페이지 주입 스크립트 (가시성 위장 · 자동 재개 · 브리지 · MediaSession 폴리필)
@@ -36,11 +36,11 @@ bgplay/
 ## 테스트
 
 ```bash
-node bgplay/shared/test/bgplay.test.mjs      # 주입 스크립트 12개
-node bgplay/shared/test/library.test.mjs     # 보관함 18개 (SHOTS=<dir> 지정 시 스크린샷 저장)
-node bgplay/shared/test/live-youtube.mjs     # 실제 YouTube 대상 (YouTube 접속 가능한 PC에서, HEADED=1 권장)
-bgplay/scripts/check-android.sh [--install]  # Android 빌드·lint·기기 점검
-bgplay/scripts/check-ios.sh                  # iOS 프로젝트 생성·시뮬레이터 빌드
+node shared/test/bgplay.test.mjs      # 주입 스크립트 12개
+node shared/test/library.test.mjs     # 보관함 18개 (SHOTS=<dir> 지정 시 스크린샷 저장)
+node shared/test/live-youtube.mjs     # 실제 YouTube 대상 (YouTube 접속 가능한 PC에서, HEADED=1 권장)
+scripts/check-android.sh [--install]  # Android 빌드·lint·기기 점검
+scripts/check-ios.sh                  # iOS 프로젝트 생성·시뮬레이터 빌드
 ```
 
 > 개발 환경의 제약(SDK·Xcode·기기 없음, YouTube 차단) 때문에 마지막 세 개는 아직 실행해 보지 못했습니다. 절차와 판정 기준은 [DOCS/ENV_PENDING.md](DOCS/ENV_PENDING.md)에 있습니다.
@@ -50,7 +50,7 @@ bgplay/scripts/check-ios.sh                  # iOS 프로젝트 생성·시뮬�
 필요: Android Studio(또는 Android SDK 35 + JDK 17 이상).
 
 ```bash
-cd bgplay/android
+cd android
 ./gradlew assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
@@ -66,7 +66,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ```bash
 brew install xcodegen
-cd bgplay/ios
+cd ios
 xcodegen generate
 open BgPlay.xcodeproj
 ```

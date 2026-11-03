@@ -3,7 +3,7 @@
 # ⚠️ 개발 환경에는 macOS/Xcode가 없어 이 스크립트를 실행해 보지 못했다(2026-11-03).
 #
 # 필요: macOS, Xcode 15+, XcodeGen(brew install xcodegen)
-# 사용: bgplay/scripts/check-ios.sh     시뮬레이터용 빌드(서명 없이)로 컴파일 오류 확인
+# 사용: scripts/check-ios.sh     시뮬레이터용 빌드(서명 없이)로 컴파일 오류 확인
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/scripts/out"; mkdir -p "$OUT"

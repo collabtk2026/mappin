@@ -1,5 +1,5 @@
 // 보관함(빠른 저장 → 나중에 분류) 테스트: core.js 단위 테스트 + UI(Playwright/Chromium) 시나리오.
-// 실행: node bgplay/shared/test/library.test.mjs   (스크린샷: SHOTS=<dir> 환경변수)
+// 실행: node shared/test/library.test.mjs   (스크린샷: SHOTS=<dir> 환경변수)
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';

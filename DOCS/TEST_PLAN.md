@@ -6,17 +6,17 @@
 
 | 명령 | 대상 | 결과 (2026-11-03) |
 |---|---|---|
-| `node bgplay/shared/test/bgplay.test.mjs` | 주입 스크립트: 가시성 위장, 리스너 차단, 엔진 정지 자동 재개(2초 창), 사용자/통화 정지 비재개, holdAutoResume, 메타데이터·명령 브리지, BG 끔 대조군, **Media Session 폴리필** | **12/12** |
-| `node bgplay/shared/test/library.test.mjs` | 보관함 core 7 + UI 11 ([FEATURE_PLAYLIST.md §6](FEATURE_PLAYLIST.md)) | **18/18** |
+| `node shared/test/bgplay.test.mjs` | 주입 스크립트: 가시성 위장, 리스너 차단, 엔진 정지 자동 재개(2초 창), 사용자/통화 정지 비재개, holdAutoResume, 메타데이터·명령 브리지, BG 끔 대조군, **Media Session 폴리필** | **12/12** |
+| `node shared/test/library.test.mjs` | 보관함 core 7 + UI 11 ([FEATURE_PLAYLIST.md §6](FEATURE_PLAYLIST.md)) | **18/18** |
 | Kotlin 컴파일 확인 | Android 15 프레임워크 jar(Robolectric android-all) + androidx.webkit 시그니처 스텁으로 `app/src/main/java` 전체 컴파일 | 성공 (리소스/매니페스트/AGP 빌드는 미실행) |
 | iOS | 빌드 환경 없음 | 미실행 |
 
 > 이 환경에서 dl.google.com이 막혀 있어 Android SDK/AGP 빌드를 할 수 없다. Mac이나 Android Studio에서 첫 빌드할 때 나오는 오류는 LOG에 기록한다.
 >
 > 다른 환경에서 실행할 스크립트와 절차는 [ENV_PENDING.md](ENV_PENDING.md)에 있다.
-> - `bgplay/scripts/check-android.sh [--install]`: 빌드, lint, 기기 설치, 상태 덤프
-> - `bgplay/scripts/check-ios.sh`: XcodeGen, 시뮬레이터 빌드, 번들 확인
-> - `node bgplay/shared/test/live-youtube.mjs`: 실제 YouTube 대상 검증
+> - `scripts/check-android.sh [--install]`: 빌드, lint, 기기 설치, 상태 덤프
+> - `scripts/check-ios.sh`: XcodeGen, 시뮬레이터 빌드, 번들 확인
+> - `node shared/test/live-youtube.mjs`: 실제 YouTube 대상 검증
 
 ## 1. 실기기 검증 계획 — 백그라운드 재생 (아직 안 함)
 

@@ -34,7 +34,7 @@ m.youtube.com / music.youtube.com을 앱 안에서 띄워 **백그라운드에�
 ## 구조
 
 ```
-bgplay/
+bgplay/  (저장소 루트)
 ├─ CLAUDE.md                   작업 규칙 (항상 DOCS에 기록)
 ├─ DOCS/                       모든 문서 (이 폴더)
 ├─ shared/
@@ -79,4 +79,4 @@ bgplay/
 3. iOS 잠금화면 저장(`bookmarkCommand`), Share Extension.
 4. Android PiP.
 5. 자동 로컬 백업, 휴지통.
-6. 이 디렉터리를 독립 저장소로 분리한다(현재는 mappin 저장소 안).
+6. ~~독립 저장소로 분리~~ → 완료(2026-11-03, LOG #5). 영구 원격 저장소 지정은 HANDOFF T-18.

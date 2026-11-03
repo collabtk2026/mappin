@@ -4,12 +4,12 @@
 //    YouTube에 접속되는 PC에서 실행하고 결과를 DOCS/LOG.md 에 기록한다. (DOCS/ENV_PENDING.md E-04)
 //
 // 실행:
-//   node bgplay/shared/test/live-youtube.mjs                 # 헤드리스: 메타데이터·핸들러·폴리필 확인
-//   HEADED=1 node bgplay/shared/test/live-youtube.mjs        # 창 표시: 실제 탭 숨김(백그라운드) 테스트 포함
+//   node shared/test/live-youtube.mjs                 # 헤드리스: 메타데이터·핸들러·폴리필 확인
+//   HEADED=1 node shared/test/live-youtube.mjs        # 창 표시: 실제 탭 숨김(백그라운드) 테스트 포함
 //   VIDEO=<11자 ID> MUSIC=1 node ...                          # 다른 영상 / music.youtube.com 도 확인
 //   CHROME=/path/to/chrome node ...                           # 다른 Chromium 실행 파일
 //
-// 결과: 콘솔 요약 + bgplay/shared/test/live-report.json (커밋하지 않음)
+// 결과: 콘솔 요약 + shared/test/live-report.json (커밋하지 않음)
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';

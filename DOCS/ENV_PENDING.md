@@ -36,7 +36,7 @@
 
 ## 1. 환경 준비 체크리스트
 
-- [ ] 저장소 받기: `git clone https://github.com/collabtk2026/mappin && cd mappin && git checkout ccr-94ee0a85-9h95lk`(또는 병합된 브랜치)
+- [ ] 저장소 받기: BgPlay 독립 저장소를 clone한다(원격이 아직 없으면 `git clone bgplay.bundle bgplay`). 이하 모든 경로는 저장소 루트 기준이다.
 - [ ] Node 22+, `npm i -g playwright` 또는 저장소 밖에서 `npx playwright install chromium`
   - 공용 테스트는 `require('playwright')`를 쓴다. 전역 설치나 `NODE_PATH`를 맞춘다.
 - [ ] **Android**: Android Studio(최신), SDK Platform 35, Build-Tools, JDK 17+, USB 디버깅을 켠 기기
@@ -46,8 +46,8 @@
 먼저 이 환경에서 통과한 테스트가 새 환경에서도 통과하는지 확인한다.
 
 ```bash
-node bgplay/shared/test/bgplay.test.mjs      # 기대: 12/12
-node bgplay/shared/test/library.test.mjs     # 기대: 18/18
+node shared/test/bgplay.test.mjs      # 기대: 12/12
+node shared/test/library.test.mjs     # 기대: 18/18
 ```
 
 ---
@@ -60,17 +60,17 @@ node bgplay/shared/test/library.test.mjs     # 기대: 18/18
 **실행**
 
 ```bash
-bgplay/scripts/check-android.sh          # 공용 테스트 → assembleDebug → APK assets 확인 → lintDebug
-# 로그: bgplay/scripts/out/android-*.log
+scripts/check-android.sh          # 공용 테스트 → assembleDebug → APK assets 확인 → lintDebug
+# 로그: scripts/out/android-*.log
 ```
 
-또는 Android Studio에서 `bgplay/android`를 열고 Sync → Run.
+또는 Android Studio에서 `android`를 열고 Sync → Run.
 
 **예상 오류와 대처**
 
 | 증상 | 원인 | 대처 |
 |---|---|---|
-| Plugin `com.android.application` 8.11.1을 찾을 수 없음, 또는 Gradle 버전 불일치 | 버전은 2025년 기준으로 적었고 확인 못 함 | Android Studio의 AGP Upgrade Assistant 사용. `bgplay/android/build.gradle.kts`의 AGP/Kotlin 버전과 `gradle/wrapper/gradle-wrapper.properties`(현재 8.14.3)를 맞춘다 |
+| Plugin `com.android.application` 8.11.1을 찾을 수 없음, 또는 Gradle 버전 불일치 | 버전은 2025년 기준으로 적었고 확인 못 함 | Android Studio의 AGP Upgrade Assistant 사용. `android/build.gradle.kts`의 AGP/Kotlin 버전과 `gradle/wrapper/gradle-wrapper.properties`(현재 8.14.3)를 맞춘다 |
 | AGP 9.x에서 `org.jetbrains.kotlin.android` 관련 오류 | AGP 9부터 Kotlin 지원이 내장됨 | 안내 메시지에 따라 Kotlin 플러그인을 빼거나 `android.builtInKotlin` 설정 |
 | `kotlinOptions` deprecated 경고/오류 | Kotlin 2.x | `kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }`로 교체 |
 | `addDocumentStartJavaScript`가 restricted/experimental API라는 오류 | androidx.webkit 버전에 따라 공개 여부가 다를 수 있음 | `androidx.webkit` 최신 버전으로 올리고 릴리스 노트 확인. 그래도 막히면 `onPageStarted` 폴백만으로 동작하는지 E-02에서 확인 |
@@ -92,7 +92,7 @@ bgplay/scripts/check-android.sh          # 공용 테스트 → assembleDebug �
 ## E-02 Android 실기기 검증
 
 ```bash
-bgplay/scripts/check-android.sh --install   # 설치·실행 → (재생 중) 서비스/미디어세션 덤프 → (화면 끔 60초) 프로세스 상태 → logcat
+scripts/check-android.sh --install   # 설치·실행 → (재생 중) 서비스/미디어세션 덤프 → (화면 끔 60초) 프로세스 상태 → logcat
 ```
 
 **체크리스트**: [TEST_PLAN.md](TEST_PLAN.md) §1(백그라운드 1–13)과 §2(보관함 P1–P15). 특히 다음을 본다.
@@ -120,7 +120,7 @@ bgplay/scripts/check-android.sh --install   # 설치·실행 → (재생 중) �
 **이번에 확인한 것**: `Info.plist` 형식만 확인했다(plistlib). **Swift 파일 9개는 컴파일러에 한 번도 넣어 보지 않았다.**
 
 ```bash
-bgplay/scripts/check-ios.sh     # xcodegen → 시뮬레이터용 빌드(서명 없이) → 번들 리소스와 UIBackgroundModes 확인
+scripts/check-ios.sh     # xcodegen → 시뮬레이터용 빌드(서명 없이) → 번들 리소스와 UIBackgroundModes 확인
 ```
 
 **컴파일할 때 먼저 의심할 곳**
@@ -153,10 +153,10 @@ bgplay/scripts/check-ios.sh     # xcodegen → 시뮬레이터용 빌드(서명 
 이 환경에서는 YouTube 접속이 막혀 **실제 YouTube에서 `bgplay.js`를 한 번도 돌려보지 못했다.** 테스트는 모두 YouTube를 흉내 낸 테스트 페이지로 했다.
 
 ```bash
-node bgplay/shared/test/live-youtube.mjs                  # 헤드리스: A(메타데이터), B(폴리필 경로)
-HEADED=1 node bgplay/shared/test/live-youtube.mjs         # + C/D: 실제 탭 숨김 20초 (BG 켬/끔 비교)
-VIDEO=<ID> MUSIC=1 HEADED=1 node bgplay/shared/test/live-youtube.mjs   # + E: music.youtube.com
-# 보고서: bgplay/shared/test/live-report.json (gitignore)
+node shared/test/live-youtube.mjs                  # 헤드리스: A(메타데이터), B(폴리필 경로)
+HEADED=1 node shared/test/live-youtube.mjs         # + C/D: 실제 탭 숨김 20초 (BG 켬/끔 비교)
+VIDEO=<ID> MUSIC=1 HEADED=1 node shared/test/live-youtube.mjs   # + E: music.youtube.com
+# 보고서: shared/test/live-report.json (gitignore)
 ```
 
 **판정 가이드**
@@ -242,4 +242,4 @@ VIDEO=<ID> MUSIC=1 HEADED=1 node bgplay/shared/test/live-youtube.mjs   # + E: mu
 2. [LOG.md](LOG.md)에 새 항목: 환경(기기, OS 버전, 계정 종류), 실행 명령, 결과, 수정한 내용
 3. [TEST_PLAN.md](TEST_PLAN.md) 체크박스
 4. 결정이 생기면 [DECISIONS.md](DECISIONS.md), 상태가 바뀌면 [OVERVIEW.md](OVERVIEW.md)
-5. 스크립트 로그(`bgplay/scripts/out/`)와 `live-report.json`은 커밋하지 않는다. 필요한 내용은 LOG에 요약한다.
+5. 스크립트 로그(`scripts/out/`)와 `live-report.json`은 커밋하지 않는다. 필요한 내용은 LOG에 요약한다.

@@ -3,7 +3,7 @@
 > 이 문서는 **다른 AI 모델이나 개발자가 이 문서만 읽고 이어서 작업할 수 있도록** 쓴 것이다. 지금까지 한 일, 앞으로 할 일, 점검할 것을 담는다.
 > 문서 목록: [README](README.md) · [작업 로그](LOG.md) · [전체 개요](OVERVIEW.md)
 >
-> 마지막 갱신: 2026-11-03 · 브랜치: `ccr-94ee0a85-9h95lk`(저장소 `collabtk2026/mappin`, 하위 디렉터리 `bgplay/`)
+> 마지막 갱신: 2026-11-03 · **독립 저장소**(BgPlay만, 기본 브랜치 `main`). 2026-11-03에 `collabtk2026/mappin`의 `bgplay/` 디렉터리(브랜치 `ccr-94ee0a85-9h95lk`)에서 `git subtree split`으로 분리했다. Mappin과는 무관하다.
 
 ---
 
@@ -51,12 +51,15 @@
 
 커밋 이력(최신이 위):
 
-| 커밋 | 내용 |
-|---|---|
-| `821e150` | 스토어 출시 검토(STORE_RELEASE), 인수인계(HANDOFF), AGENTS.md, D-12 |
-| `d8cfe72`, `230d285` | 환경 제약 정리(ENV_PENDING), 점검 스크립트 3개 |
-| `fed8802`, `e839e38` | DOCS 체계, 사례 조사, 빠른 저장·보관함, Media Session 폴리필 |
-| `b89133e` | Brave 연구, Android/iOS 1차 앱, `bgplay.js` |
+> 아래 커밋 해시는 **분리 전 Mappin 저장소 기준**이다. 이 독립 저장소의 해시는 오른쪽 열에 있다(subtree split으로 해시가 바뀜).
+
+| Mappin 커밋 | 독립 저장소 커밋 | 내용 |
+|---|---|---|
+| `41a4906`, `e31efb6` | `54ede72`, `43c3b20` | LOG #4 해시 기록, Mappin 쪽 분리 안내 |
+| `821e150` | `701c039` | 스토어 출시 검토(STORE_RELEASE), 인수인계(HANDOFF), AGENTS.md, D-12 |
+| `d8cfe72`, `230d285` | `42b41eb`, `e044ff4` | 환경 제약 정리(ENV_PENDING), 점검 스크립트 3개 |
+| `fed8802`, `e839e38` | `7ce57f4`, `504a584` | DOCS 체계, 사례 조사, 빠른 저장·보관함, Media Session 폴리필 |
+| `b89133e` | `5b55530` | Brave 연구, Android/iOS 1차 앱, `bgplay.js` |
 
 
 
@@ -65,7 +68,7 @@
 ## 3. 코드 지도
 
 ```
-bgplay/
+bgplay/  (저장소 루트)
 ├─ AGENTS.md / CLAUDE.md           AI 작업 규칙 (짧음, 이 문서로 안내)
 ├─ DOCS/                           모든 문서
 ├─ shared/
@@ -127,7 +130,7 @@ bgplay/
 | 주입 스크립트는 앱 번들에 넣고 document-start에 주입한다. 원격 로딩 금지 | D-04 |
 | 다운로드, 오프라인 저장, 오디오 추출 기능을 넣지 않는다 | Apple 5.2.3, Brave 2026-06 사례 |
 | 앱 이름과 아이콘에 YouTube 상표를 쓰지 않는다 | STORE_RELEASE A4/G3 |
-| `shared/` 를 고치면 `node bgplay/shared/test/bgplay.test.mjs`, `library.test.mjs`가 모두 통과해야 한다 | [TEST_PLAN §0](TEST_PLAN.md) |
+| `shared/` 를 고치면 `node shared/test/bgplay.test.mjs`, `library.test.mjs`가 모두 통과해야 한다 | [TEST_PLAN §0](TEST_PLAN.md) |
 | 엔진(브라우저)이 건 정지만 자동 재개한다. JS `pause()`(사용자나 사이트)는 재개하지 않는다 | `bgplay.js` §2, 테스트 |
 | 브리지 메시지는 출처를 검증한다(재생 WebView: YouTube 메인 프레임, 보관함: 앱 자산 origin/`file:`) | D-11 |
 | 검증하지 못한 것을 "동작함"이라고 쓰지 않는다. 미검증은 미검증으로 기록한다 | 사용자 신뢰 |
@@ -138,15 +141,15 @@ bgplay/
 
 ```bash
 # 공용 (Node 22+, require('playwright') 가능해야 함)
-node bgplay/shared/test/bgplay.test.mjs              # 기대 12/12
-node bgplay/shared/test/library.test.mjs             # 기대 18/18 (SHOTS=<dir>로 스크린샷)
-HEADED=1 node bgplay/shared/test/live-youtube.mjs    # 실제 YouTube (판정 기준: ENV_PENDING E-04)
+node shared/test/bgplay.test.mjs              # 기대 12/12
+node shared/test/library.test.mjs             # 기대 18/18 (SHOTS=<dir>로 스크린샷)
+HEADED=1 node shared/test/live-youtube.mjs    # 실제 YouTube (판정 기준: ENV_PENDING E-04)
 
 # Android (SDK 필요)
-bgplay/scripts/check-android.sh [--install]
+scripts/check-android.sh [--install]
 
 # iOS (macOS + Xcode + xcodegen)
-bgplay/scripts/check-ios.sh
+scripts/check-ios.sh
 ```
 
 SDK 없이 Kotlin 문법·타입만 검사하는 방법(이번 환경에서 쓴 우회)은 [ENV_PENDING E-01](ENV_PENDING.md)에 있다. Robolectric `android-all` jar와 androidx.webkit 스텁으로 `kotlin("jvm")` 프로젝트를 만들어 `compileKotlin`한다.
@@ -183,7 +186,7 @@ SDK 없이 Kotlin 문법·타입만 검사하는 방법(이번 환경에서 쓴 
 | T-15 | 중복 저장 시 `saveCount`/저장 시각 갱신, 저장 시점 재생 위치 기억 | `core.js`(`quickSave`), `trackToItem` | 테스트 추가 | ☐ |
 | T-16 | 주간 "임시함 정리" 알림 | Android WorkManager 또는 AlarmManager, iOS UNUserNotification | 설정에서 켜고 끄기 | ☐ |
 | T-17 | iOS AppIcon, 실기기 스크린샷(E-09) | `ios/BgPlay/Assets.xcassets`, `project.yml`, `DOCS/images` | 빌드 경고 없음 | ☐ |
-| T-18 | bgplay를 독립 저장소로 분리 | — | 사용자 승인 후 | ☐ |
+| T-18 | 독립 저장소 분리(로컬 완료) → **영구 원격 저장소 지정과 push**, Mappin 쪽 `bgplay/` 정리 여부 결정 | — | 원격 저장소에 `main` push, Mappin 쪽은 안내만 남김 | ◐ |
 
 ### 6.3 스토어 트랙 (`store` 빌드 — 근거: STORE_RELEASE §3·§5·§6)
 

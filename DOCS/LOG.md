@@ -10,14 +10,19 @@
 
 **한 일**
 - `git subtree split --prefix=bgplay`로 **BgPlay 커밋 이력만 뽑은 독립 저장소**를 만들고, `bgplay/` 내용을 저장소 루트로 올림.
-- 독립 저장소에서 경로 표기를 정리함(`bgplay/shared/...` → `shared/...` 등. 문서, 스크립트, 테스트 주석, AGENTS/CLAUDE 규칙). 이 정리는 독립 저장소에만 있는 커밋.
+- 독립 저장소에서 경로 표기를 정리함(`shared/...` → `shared/...` 등. 문서, 스크립트, 테스트 주석, AGENTS/CLAUDE 규칙). 이 정리는 독립 저장소에만 있는 커밋.
 - 결과물:
   - git bundle 파일 `bgplay.bundle`: 이력 포함, `git clone bgplay.bundle bgplay`로 복원
   - 소스 압축 `bgplay-src.tar.gz`
-- Mappin 쪽: 루트 README와 `bgplay/README.md` 상단에 "Mappin과 무관한 별개 프로젝트"라는 안내를 추가함.
+- Mappin 쪽: 루트 README와 `README.md` 상단에 "Mappin과 무관한 별개 프로젝트"라는 안내를 추가함.
 - 영구 저장 위치(새 GitHub 저장소 또는 별도 브랜치)는 사용자에게 확인을 받는 중. 이 세션은 새 저장소를 만들 수 없음.
 
 **검증**: 독립 저장소에서 공용 테스트를 다시 실행함(결과는 독립 저장소 LOG의 이 항목 아래 "독립 저장소 검증"에 기록).
+
+**독립 저장소 검증 (이 저장소에서 실행)**
+- 경로 정리 후 `node shared/test/bgplay.test.mjs` 12/12, `node shared/test/library.test.mjs` 18/18
+- `scripts/*.sh`는 `bash -n`, `live-youtube.mjs`는 `node --check` 통과. 문서 내부 링크 검사 통과
+- 커밋 해시 대응표(Mappin ↔ 독립 저장소)는 [HANDOFF.md §2](HANDOFF.md)에 있음
 
 ---
 
@@ -37,7 +42,7 @@
   - "하면 안 되는 회피 방법"과 이유(계정 해지), 빌드 변형 설계, 출시 전 체크리스트.
 - [DECISIONS D-12](DECISIONS.md): 심사 회피 기법 금지, 이중 트랙.
 - [HANDOFF.md](HANDOFF.md): 다른 AI/개발자용 인수인계. 내용은 시작 순서, 사용자와의 약속, 현재 상태와 커밋, 코드 지도, 브리지 프로토콜, 데이터 모델, 하지 말 것, 실행 명령, **백로그 T-01~T-25**(완료 기준 포함), 점검 목록, 문서 갱신 규칙, 용어.
-- `bgplay/AGENTS.md`(AI 공통 진입점) 추가. CLAUDE.md, DOCS/README, OVERVIEW, RISKS, ENV_PENDING(E-07에 support.google.com 추가)에 연결.
+- `AGENTS.md`(AI 공통 진입점) 추가. CLAUDE.md, DOCS/README, OVERVIEW, RISKS, ENV_PENDING(E-07에 support.google.com 추가)에 연결.
 
 **검증**: 문서 작업만 함(코드 변경 없음). 문서 내부 링크 검사 통과.
 
@@ -93,9 +98,9 @@
 
 **한 일**
 1. 문서 체계
-   - `bgplay/DOCS/` 생성: README(규칙·목록), LOG, OVERVIEW, DECISIONS, RESEARCH_BRAVE, CASE_STUDIES, FEATURE_PLAYLIST, ARCHITECTURE, TEST_PLAN, RISKS, images/.
+   - `DOCS/` 생성: README(규칙·목록), LOG, OVERVIEW, DECISIONS, RESEARCH_BRAVE, CASE_STUDIES, FEATURE_PLAYLIST, ARCHITECTURE, TEST_PLAN, RISKS, images/.
    - 기존 `docs/RESEARCH.md`를 주제별로 나누고 `docs/`는 삭제.
-   - `bgplay/CLAUDE.md`에 "항상 DOCS에 기록" 규칙을 적어 이후 세션에도 적용되게 함.
+   - `CLAUDE.md`에 "항상 DOCS에 기록" 규칙을 적어 이후 세션에도 적용되게 함.
 2. 사례 조사(→ [CASE_STUDIES.md](CASE_STUDIES.md)): 오픈소스 저장소를 clone해서 코드를 직접 확인함.
    - 앱: YTPro, NouTube, Firefox 확장 2종, ReVanced, YTLite/uYouEnhanced, Pear Desktop(구 th-ch/youtube-music), NewPipe, Metrolist 외 네이티브 클라이언트 10여 개.
    - 보도 기반: ProTube·Musi·Vanced 정책 이력.

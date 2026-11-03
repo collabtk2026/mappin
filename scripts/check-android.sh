@@ -3,8 +3,8 @@
 # ⚠️ 개발 환경에는 Android SDK가 없어 이 스크립트를 실행해 보지 못했다(2026-11-03).
 #
 # 필요: Android SDK(ANDROID_HOME 또는 local.properties의 sdk.dir), JDK 17+, (선택) adb로 연결된 기기
-# 사용: bgplay/scripts/check-android.sh            빌드 + lint
-#       bgplay/scripts/check-android.sh --install  + 기기 설치·실행 + 상태 덤프
+# 사용: scripts/check-android.sh            빌드 + lint
+#       scripts/check-android.sh --install  + 기기 설치·실행 + 상태 덤프
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/scripts/out"; mkdir -p "$OUT"
@@ -22,7 +22,7 @@ if [ -z "${ANDROID_HOME:-}" ] && ! grep -qs '^sdk.dir=' "$ROOT/android/local.pro
 fi
 
 step "공용 테스트"
-(cd "$ROOT/.." && node bgplay/shared/test/bgplay.test.mjs | tail -1 && node bgplay/shared/test/library.test.mjs | tail -1) || echo "!! 공용 테스트 실패/실행 불가 (Playwright 필요)"
+(cd "$ROOT" && node shared/test/bgplay.test.mjs | tail -1 && node shared/test/library.test.mjs | tail -1) || echo "!! 공용 테스트 실패/실행 불가 (Playwright 필요)"
 
 step "Gradle 빌드 (assembleDebug)"
 cd "$ROOT/android"

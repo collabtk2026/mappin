@@ -1,5 +1,5 @@
 // bgplay.js 동작 검증 (Playwright + Chromium).
-// 실행: node bgplay/shared/test/bgplay.test.mjs
+// 실행: node shared/test/bgplay.test.mjs
 //
 // 헤드리스 Chromium에서는 "진짜" 백그라운드 전환을 만들 수 없으므로, bgplay.js보다 먼저
 // Document.prototype.visibilityState 를 제어 가능한 가짜로 바꿔 엔진 역할을 흉내 낸다.

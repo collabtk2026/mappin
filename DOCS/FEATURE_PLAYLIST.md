@@ -138,7 +138,7 @@ iOS      LibraryOverlay.swift  투명 WKWebView 오버레이 (번들 library/ind
 
 ## 6. 테스트
 
-`node bgplay/shared/test/library.test.mjs`: core 7개 + UI 11개 = **18/18 통과**
+`node shared/test/library.test.mjs`: core 7개 + UI 11개 = **18/18 통과**
 
 - core: URL 파싱(watch/music/youtu.be/shorts/live/타 도메인), 임시 저장과 중복, 분류(추가/이동), 태그 정규화, MRU, 카테고리 중복 이름, 삭제 시 임시함 복귀, 깨진 데이터 복구, 큐/셔플, 내보내기와 가져오기
 - UI(Chromium 390×844, 터치): 상단 ＋ 결과와 저장/배지 메시지, 분류 시트(선택, 태그 입력, 소속 편집, "지난번처럼"), 시트 안 새 카테고리, 임시함 빠른 이동과 되돌리기, 하나씩 분류 전체 흐름, 길게 눌러 다중 선택 일괄 분류, 카테고리 큐 재생, 카테고리 삭제와 되돌리기, 검색과 태그 필터, 뒤로 가기 순서, XSS 이스케이프
