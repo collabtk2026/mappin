@@ -20,6 +20,23 @@ enum URLPolicy {
         return host == "youtube.com" || host.hasSuffix(".youtube.com") || host == "youtu.be"
     }
 
+    /// core.js parseVideo 와 같은 규칙: watch?v= / youtu.be / shorts / live / embed
+    static func videoId(of string: String?) -> String? {
+        guard let string, let url = URL(string: string), isYouTube(host: url.host) else { return nil }
+        let host = url.host!.lowercased()
+        let parts = url.path.split(separator: "/").map(String.init)
+        var id: String?
+        if host == "youtu.be" {
+            id = parts.first
+        } else if let v = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "v" })?.value {
+            id = v
+        } else if parts.count >= 2, ["shorts", "live", "embed", "v"].contains(parts[0]) {
+            id = parts[1]
+        }
+        guard let id, id.range(of: #"^[A-Za-z0-9_-]{11}$"#, options: .regularExpression) != nil else { return nil }
+        return id
+    }
+
     /// bgplay://open?url=<encoded>  또는 YouTube https URL 그대로.
     static func target(from url: URL) -> URL? {
         if url.scheme?.lowercased() == "bgplay" {

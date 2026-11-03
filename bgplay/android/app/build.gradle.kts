@@ -31,10 +31,10 @@ android {
         jvmTarget = "17"
     }
 
-    // 주입 스크립트는 iOS와 공유한다: bgplay/shared/js/bgplay.js -> assets/bgplay.js
+    // iOS와 공유: shared/js/bgplay.js -> assets/bgplay.js, shared/web/library/* -> assets/library/*
     sourceSets {
         getByName("main") {
-            assets.srcDirs("src/main/assets", "../../shared/js")
+            assets.srcDirs("src/main/assets", "../../shared/js", "../../shared/web")
         }
     }
 }

@@ -31,6 +31,8 @@ struct PlaybackInfo {
     var artworkURL: URL?
     var canNext = false
     var canPrev = false
+    var ended = false
+    var url: String?
 
     init() {}
 
@@ -46,5 +48,7 @@ struct PlaybackInfo {
         artworkURL = m.artwork.flatMap(URL.init(string:)).flatMap { $0.scheme == "https" ? $0 : nil }
         canNext = m.canNext ?? false
         canPrev = m.canPrev ?? false
+        ended = m.ended ?? false
+        url = m.url
     }
 }

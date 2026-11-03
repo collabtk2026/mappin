@@ -15,4 +15,18 @@
     <string name="bg_off">BG 끔</string>
     <string name="bg_toggled_on">백그라운드 재생 켬 (새로고침)</string>
     <string name="bg_toggled_off">백그라운드 재생 끔 (새로고침)</string>
+    <string name="action_save">임시 저장</string>
+    <string name="btn_quick_save">＋ 임시</string>
+    <string name="btn_classify">분류</string>
+    <string name="btn_library">보관함</string>
+    <string name="btn_library_n">보관함 %1$d</string>
+    <string name="menu_reload">새로고침</string>
+    <string name="menu_bg">백그라운드 재생</string>
+    <string name="nothing_to_save">저장할 영상이 없어요. 영상을 먼저 열어 주세요</string>
+    <string name="saved_to_inbox">임시함에 저장했어요</string>
+    <string name="already_saved">이미 저장된 곡이에요</string>
+    <string name="already_in">이미 저장됨 · %1$s</string>
+    <string name="already_in_inbox">이미 임시함에 있어요</string>
+    <string name="snack_classify">분류</string>
+    <string name="export_title">보관함 내보내기</string>
 </resources>

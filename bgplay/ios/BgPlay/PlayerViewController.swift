@@ -22,6 +22,21 @@ final class PlayerViewController: UIViewController {
     private var bgItem: UIBarButtonItem!
     private var pendingURL: URL?
 
+    // 상단 바: ① 임시 저장 ② 분류 저장 ③ 보관함
+    private let topBar = UIStackView()
+    private var libraryButton: UIButton!
+    private let library = LibraryOverlay()
+    private let snack = SnackBar()
+    private static let accent = UIColor(red: 1, green: 0.31, blue: 0.27, alpha: 1)
+
+    // 보관함 "전체 재생" 큐
+    private var queue: [LibraryOverlay.QueueItem] = []
+    private var queueIndex = -1
+    private var queueName: String?
+    private var awaitingId: String?
+    private var awaitingSince = Date.distantPast
+    private var hasQueueNext: Bool { !queue.isEmpty && queueIndex + 1 < queue.count }
+
     private static let script: String = {
         guard let url = Bundle.main.url(forResource: "bgplay", withExtension: "js"),
               let source = try? String(contentsOf: url, encoding: .utf8) else {
@@ -39,8 +54,17 @@ final class PlayerViewController: UIViewController {
         webView = makeWebView()
         layout()
         buildToolbar()
+        buildTopBar()
+        wireLibrary()
 
-        nowPlaying.onCommand = { [weak self] name, arg in self?.command(name, arg) }
+        nowPlaying.onCommand = { [weak self] name, arg in
+            guard let self else { return }
+            switch name {
+            case "next": self.skipNext()
+            case "prev": self.skipPrev()
+            default: self.command(name, arg)
+            }
+        }
         audio.onInterruption = { [weak self] began, shouldResume in
             guard let self else { return }
             if began {
@@ -123,8 +147,12 @@ final class PlayerViewController: UIViewController {
         switch m.type {
         case "state":
             info = PlaybackInfo(m)
+            advanceQueue(info)
             if info.playing { audio.activate() }
-            if info.hasMedia { nowPlaying.update(info) } else { nowPlaying.clear() }
+            var shown = info
+            shown.canNext = info.canNext || hasQueueNext
+            if shown.album == nil { shown.album = queueName }
+            if info.hasMedia { nowPlaying.update(shown) } else { nowPlaying.clear() }
         case "autoResume":
             NSLog("[BgPlay] engine pause detected; resumed")
         default:
@@ -137,12 +165,29 @@ final class PlayerViewController: UIViewController {
     private func layout() {
         webView.translatesAutoresizingMaskIntoConstraints = false
         toolbar.translatesAutoresizingMaskIntoConstraints = false
+        topBar.translatesAutoresizingMaskIntoConstraints = false
+        snack.translatesAutoresizingMaskIntoConstraints = false
+        library.webView.translatesAutoresizingMaskIntoConstraints = false
         toolbar.barStyle = .black
         toolbar.tintColor = .white
+        view.addSubview(topBar)
         view.addSubview(webView)
         view.addSubview(toolbar)
+        view.addSubview(library.webView)   // 화면 전체를 덮는 투명 오버레이 (닫혀 있으면 숨김)
+        view.addSubview(snack)
         NSLayoutConstraint.activate([
-            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            topBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            topBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 12),
+            topBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
+            topBar.heightAnchor.constraint(equalToConstant: 44),
+            library.webView.topAnchor.constraint(equalTo: view.topAnchor),
+            library.webView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            library.webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            library.webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            snack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 12),
+            snack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -12),
+            snack.bottomAnchor.constraint(equalTo: toolbar.topAnchor, constant: -12),
+            webView.topAnchor.constraint(equalTo: topBar.bottomAnchor),
             webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             webView.bottomAnchor.constraint(equalTo: toolbar.topAnchor),
@@ -175,7 +220,7 @@ final class PlayerViewController: UIViewController {
 
     private func updateBgItem() {
         bgItem.title = settings.backgroundPlay ? "BG 켬" : "BG 끔"
-        bgItem.tintColor = settings.backgroundPlay ? UIColor(red: 1, green: 0.31, blue: 0.27, alpha: 1) : .gray
+        bgItem.tintColor = settings.backgroundPlay ? Self.accent : .gray
     }
 
     @objc private func goBack() { webView.goBack() }
@@ -192,6 +237,156 @@ final class PlayerViewController: UIViewController {
         updateBgItem()
         webView.reload()
     }
+
+    // MARK: - 상단 바 / 보관함
+
+    private func buildTopBar() {
+        func button(_ title: String, accent: Bool = false, _ action: Selector) -> UIButton {
+            let b = UIButton(type: .system)
+            b.setTitle(title, for: .normal)
+            b.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+            b.setTitleColor(accent ? Self.accent : .white, for: .normal)
+            b.addTarget(self, action: action, for: .touchUpInside)
+            return b
+        }
+        let name = UILabel()
+        name.text = "BgPlay"
+        name.font = .systemFont(ofSize: 15, weight: .bold)
+        name.textColor = .gray
+        // ① 탭 한 번 = 임시함 저장 (아무것도 묻지 않음). 길게 누르면 분류 시트.
+        let quick = button("＋ 임시", accent: true, #selector(quickSaveTapped))
+        quick.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(quickSaveLongPressed(_:))))
+        // ② 분류 저장
+        let classify = button("분류", #selector(classifyTapped))
+        // ③ 보관함 (임시함 개수 표시)
+        libraryButton = button("보관함", #selector(libraryTapped))
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let views: [UIView] = [name, spacer, quick, classify, libraryButton]
+        views.forEach { topBar.addArrangedSubview($0) }
+        topBar.axis = .horizontal
+        topBar.alignment = .center
+        topBar.spacing = 18
+    }
+
+    private func wireLibrary() {
+        library.onStats = { [weak self] inbox, _ in
+            self?.libraryButton.setTitle(inbox > 0 ? "보관함 \(inbox)" : "보관함", for: .normal)
+        }
+        library.onPlay = { [weak self] url, _ in self?.playSingle(url) }
+        library.onPlayQueue = { [weak self] name, items, index in self?.playQueue(name: name, items: items, index: index) }
+        library.onToast = { [weak self] text in self?.snack.show(text) }
+        library.onExport = { [weak self] json, filename in self?.export(json: json, filename: filename) }
+    }
+
+    @objc private func quickSaveTapped() {
+        guard let track = currentTrack() else { return snack.show("저장할 영상이 없어요. 영상을 먼저 열어 주세요") }
+        library.quickSave(track) { [weak self] r in
+            guard let self else { return }
+            let classify = { self.library.openSave(track) }
+            switch r?["status"] as? String {
+            case "added":
+                self.snack.show("임시함에 저장했어요", action: "분류", classify)
+            case "duplicate":
+                let names = r?["where"] as? [String] ?? []
+                self.snack.show(names.isEmpty ? "이미 임시함에 있어요" : "이미 저장됨 · " + names.joined(separator: ", "), action: "분류", classify)
+            default:
+                self.snack.show("저장할 영상이 없어요")
+            }
+        }
+    }
+
+    @objc private func quickSaveLongPressed(_ g: UILongPressGestureRecognizer) {
+        if g.state == .began { classifyTapped() }
+    }
+
+    @objc private func classifyTapped() {
+        guard let track = currentTrack() else { return snack.show("저장할 영상이 없어요. 영상을 먼저 열어 주세요") }
+        library.openSave(track)
+    }
+
+    @objc private func libraryTapped() {
+        library.openLibrary(nowPlaying: currentTrack())
+    }
+
+    /// 지금 보고 있는 영상 (보관함 track 형식). 영상 페이지가 아니면 nil.
+    private func currentTrack() -> [String: Any]? {
+        if let u = info.url, URLPolicy.videoId(of: u) != nil {
+            var t: [String: Any] = ["url": u]
+            if let v = info.title { t["title"] = v }
+            if let v = info.artist { t["artist"] = v }
+            if let v = info.artworkURL?.absoluteString { t["artwork"] = v }
+            if let v = info.duration { t["duration"] = v }
+            return t
+        }
+        if let u = webView.url?.absoluteString, URLPolicy.videoId(of: u) != nil {
+            return ["url": u, "title": webView.title ?? ""]
+        }
+        return nil
+    }
+
+    private func export(json: String, filename: String) {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        do { try json.write(to: url, atomically: true, encoding: .utf8) } catch { return snack.show("내보내기 실패") }
+        let vc = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        vc.popoverPresentationController?.sourceView = libraryButton
+        present(vc, animated: true)
+    }
+
+    // MARK: - 재생 큐
+
+    private func playSingle(_ url: URL) {
+        clearQueue()
+        webView.load(URLRequest(url: url))
+    }
+
+    private func playQueue(name: String, items: [LibraryOverlay.QueueItem], index: Int) {
+        queue = items
+        queueIndex = index
+        queueName = name
+        loadQueueItem()
+    }
+
+    private func clearQueue() {
+        queue = []
+        queueIndex = -1
+        queueName = nil
+        awaitingId = nil
+    }
+
+    /// 잠금화면/이어폰의 "다음": 큐가 있으면 큐, 없으면 사이트의 다음 곡.
+    private func skipNext() {
+        if queue.isEmpty { return command("next") }
+        if hasQueueNext { queueIndex += 1; loadQueueItem() } else { clearQueue() }
+    }
+
+    private func skipPrev() {
+        if !queue.isEmpty && queueIndex > 0 { queueIndex -= 1; loadQueueItem() } else { command("prev") }
+    }
+
+    private func loadQueueItem() {
+        let item = queue[queueIndex]
+        awaitingId = item.videoId
+        awaitingSince = Date()
+        webView.load(URLRequest(url: item.url))
+    }
+
+    /// 새 곡 로딩 중엔 무시 → 현재 곡이 끝나면 다음 → 사용자가 다른 영상으로 가면 큐 종료.
+    /// ⚠️ iOS 는 백그라운드에서 새 페이지의 재생 시작이 막힐 수 있다 (TEST_PLAN 참고).
+    private func advanceQueue(_ s: PlaybackInfo) {
+        guard !queue.isEmpty else { return }
+        let vid = URLPolicy.videoId(of: s.url)
+        if let waiting = awaitingId {
+            if vid == waiting || Date().timeIntervalSince(awaitingSince) > 20 { awaitingId = nil }
+            return
+        }
+        if let vid, vid != queue[queueIndex].videoId {
+            clearQueue()
+        } else if vid == queue[queueIndex].videoId, s.ended {
+            skipNext()
+        }
+    }
+
 }
 
 // MARK: - Bridge

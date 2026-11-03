@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.webkit.ScriptHandler
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
@@ -51,6 +53,8 @@ class PlayerController(private val app: Application) {
 
     val settings = Settings(app)
     var uiHost: UiHost? = null
+    /** 보관함이 떠 있는 Activity. 없으면(백그라운드) 임시 저장은 pending 으로 쌓인다. */
+    var library: LibraryController? = null
     var webView: BackgroundWebView? = null
         private set
     var info = PlaybackInfo()
@@ -94,6 +98,111 @@ class PlayerController(private val app: Application) {
             "window.__bgplay&&window.__bgplay.command(${JSONObject.quote(name)},$a)", null
         )
     }
+
+    // ------------------------------------------------------------------ 재생 큐 (보관함의 "전체 재생")
+
+    private var queue: List<QueueItem> = emptyList()
+    private var queueIndex = -1
+    var queueName: String? = null
+        private set
+    private var awaitingId: String? = null
+    private var awaitingSince = 0L
+
+    val hasQueue get() = queue.isNotEmpty()
+    val hasQueueNext get() = hasQueue && queueIndex + 1 < queue.size
+
+    fun playQueue(name: String, items: List<QueueItem>, index: Int) {
+        queue = items
+        queueIndex = index
+        queueName = name
+        loadQueueItem()
+    }
+
+    /** 보관함에서 곡 하나 재생 — 큐는 끝낸다. */
+    fun playSingle(url: String) {
+        clearQueue()
+        load(url)
+    }
+
+    fun clearQueue() {
+        queue = emptyList()
+        queueIndex = -1
+        queueName = null
+        awaitingId = null
+    }
+
+    /** 알림/잠금화면/이어폰의 "다음": 큐가 있으면 큐, 없으면 사이트의 다음 곡. */
+    fun skipNext() {
+        if (hasQueue) {
+            if (hasQueueNext) { queueIndex++; loadQueueItem() } else clearQueue()
+        } else command("next")
+    }
+
+    fun skipPrev() {
+        if (hasQueue && queueIndex > 0) { queueIndex--; loadQueueItem() } else command("prev")
+    }
+
+    private fun loadQueueItem() {
+        val item = queue[queueIndex]
+        awaitingId = item.videoId
+        awaitingSince = SystemClock.elapsedRealtime()
+        load(item.url)
+    }
+
+    /**
+     * 재생 상태로 큐를 진행한다.
+     * - 새 곡 로딩 중(awaiting)에는 이전 페이지 상태를 무시
+     * - 현재 곡이 끝나면(ended) 다음 곡 (YouTube 자동재생 카운트다운보다 먼저)
+     * - 사용자가 다른 영상으로 이동하면 큐 종료
+     */
+    private fun advanceQueue(state: PlaybackInfo) {
+        if (!hasQueue) return
+        val vid = UrlPolicy.videoIdOf(state.url)
+        val current = queue[queueIndex].videoId
+        val waiting = awaitingId
+        if (waiting != null) {
+            if (vid == waiting || SystemClock.elapsedRealtime() - awaitingSince > 20_000) awaitingId = null
+            return
+        }
+        when {
+            vid != null && vid != current -> clearQueue()
+            vid == current && state.ended -> skipNext()
+        }
+    }
+
+    // ------------------------------------------------------------------ 임시 저장
+
+    /** 지금 보고 있는 영상 정보 (보관함 track 형식). 영상 페이지가 아니면 null. */
+    fun currentTrack(): JSONObject? {
+        val url = info.url?.takeIf { UrlPolicy.videoIdOf(it) != null }
+            ?: webView?.url?.takeIf { UrlPolicy.videoIdOf(it) != null }
+            ?: return null
+        val sameAsState = info.url == url
+        return JSONObject().apply {
+            put("url", url)
+            put("title", if (sameAsState) info.title else webView?.title)
+            put("artist", if (sameAsState) info.artist else null)
+            put("artwork", if (sameAsState) info.artworkUrl else null)
+            if (sameAsState && info.durationMs > 0) put("duration", info.durationMs / 1000.0)
+        }
+    }
+
+    /** 알림/잠금화면의 "＋ 임시 저장" (앱이 백그라운드일 수 있음). */
+    fun quickSaveFromBackground() {
+        val track = currentTrack() ?: return toast(app.getString(R.string.nothing_to_save))
+        val lib = library
+        if (lib != null) {
+            lib.quickSave(track) { r ->
+                val status = r?.optString("status")
+                toast(app.getString(if (status == "duplicate") R.string.already_saved else R.string.saved_to_inbox))
+            }
+        } else {
+            app.libraryStore.addPending(track)
+            toast(app.getString(R.string.saved_to_inbox))
+        }
+    }
+
+    private fun toast(text: String) = Toast.makeText(app, text, Toast.LENGTH_SHORT).show()
 
     fun setBackgroundPlay(enabled: Boolean) {
         settings.backgroundPlay = enabled
@@ -175,6 +284,7 @@ class PlayerController(private val app: Application) {
         when (o.optString("type")) {
             "state" -> {
                 info = PlaybackInfo.fromJson(o)
+                advanceQueue(info)
                 if (info.playing) ensureService()
                 listeners.forEach { it.onPlaybackChanged(info) }
             }
