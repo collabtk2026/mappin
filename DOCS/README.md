@@ -8,7 +8,8 @@ BgPlay 프로젝트의 모든 조사·설계·작업 기록은 이 폴더에 Mar
 2. **[OVERVIEW.md](OVERVIEW.md)는 "지금 상태"의 한 장 요약이다.** 기능이나 구조가 바뀌면 같이 고친다.
 3. **주제별 내용은 해당 파일에 쌓는다.** 새 주제가 생기면 파일을 만들고 아래 목록에 추가한다.
 4. 결정을 내리면 [DECISIONS.md](DECISIONS.md)에 이유와 함께 남긴다.
-5. 출처는 각 문서 끝에 링크로 남기고, 사실 확인 수준을 표시한다: [소스 확인] / [공식] / [보도].
+5. 환경 때문에 못 한 일은 [ENV_PENDING.md](ENV_PENDING.md)에 "막힌 이유 · 필요한 환경 · 실행 절차 · 완료 기준"으로 남기고, 해결하면 상태를 바꾼다.
+6. 출처는 각 문서 끝에 링크로 남기고, 사실 확인 수준을 표시한다: [소스 확인] / [공식] / [보도].
 
 ## 문서 목록
 
@@ -16,6 +17,7 @@ BgPlay 프로젝트의 모든 조사·설계·작업 기록은 이 폴더에 Mar
 |---|---|
 | [LOG.md](LOG.md) | 작업 로그 (시간순) |
 | [OVERVIEW.md](OVERVIEW.md) | 전체 개요: 목표, 현재 기능, 구조, 상태, 다음 단계 |
+| [ENV_PENDING.md](ENV_PENDING.md) | **환경 제약으로 못 한 일과 다른 환경에서 해결하는 절차** (새 환경에서 가장 먼저 볼 것) |
 | [DECISIONS.md](DECISIONS.md) | 설계 결정 기록 |
 | [RESEARCH_BRAVE.md](RESEARCH_BRAVE.md) | Brave 소스 분석, 2026 YouTube 정책 변화, 플랫폼/엔진 제약 |
 | [CASE_STUDIES.md](CASE_STUDIES.md) | 유사 앱 사례 조사와 구현 방식 비교 |
