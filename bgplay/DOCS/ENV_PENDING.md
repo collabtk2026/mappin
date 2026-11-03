@@ -18,7 +18,7 @@
 | E-04 | 실제 YouTube 페이지 대상 스크립트 검증 | `m.youtube.com` 등 YouTube 도메인 차단(403) | YouTube 접속되는 PC + Node 22 + Playwright | 높음 | ☐ |
 | E-05 | Android WebView에 `navigator.mediaSession`이 정말 없는지 | 기기 없음. 사례 코드에서 추론만 함 | E-02와 같음 | 높음 | ☐ |
 | E-06 | Chromium 엔진의 "숨겨진 비디오 일시정지" 규칙을 소스로 확인 | `chromium.googlesource.com` 차단 | 인터넷 되는 PC | 중간 | ☐ |
-| E-07 | 막힌 웹 출처 원문 확인(정책, 보도, UX 문서) | 9to5google, androidauthority, thurrott, developers.google.com, culturedcode.com, mjtsai.com 차단. ReVanced GitHub은 로그인 요구 | 인터넷 되는 PC | 낮음 | ☐ |
+| E-07 | 막힌 웹 출처 원문 확인(정책, 보도, UX 문서) | 9to5google, androidauthority, thurrott, developers.google.com, **support.google.com**, culturedcode.com, mjtsai.com 차단. ReVanced GitHub은 로그인 요구 | 인터넷 되는 PC | 낮음 | ☐ |
 | E-08 | 기기 결과가 있어야 정할 수 있는 결정 4건 | E-02, E-03 결과 필요 | — | 높음 | ☐ |
 | E-09 | iOS 앱 아이콘, 실제 앱 스크린샷 | Xcode/기기 없음 | Mac, 기기 | 낮음 | ☐ |
 
@@ -212,6 +212,8 @@ VIDEO=<ID> MUSIC=1 HEADED=1 node bgplay/shared/test/live-youtube.mjs   # + E: mu
 | [Brave: YouTube improvements on Android](https://brave.com/whats-new/android-youtube-improvements/), brave-core PR 27849 | Brave의 변경 내용(우리 스크립트에 반영할 게 있는지) |
 | [ReVanced revanced-patches (GitHub)](https://github.com/ReVanced/revanced-patches) | GitLab 미러로 읽은 내용과 같은지(참고용) |
 | culturedcode.com(Things 3 Inbox), mjtsai.com | UX 참고(우선순위 낮음) |
+| **support.google.com**: Google Play 정책 원문(Device and Network Abuse, Spam/WebView, Intellectual Property, Deceptive Behavior), Play Console 도움말 | [STORE_RELEASE.md](STORE_RELEASE.md) G1·G2가 원문 미확인([보도]/[추정]) → 원문으로 확인해 표기를 고친다 |
+| YouTube 서비스 약관 원문, YouTube API 개발자 정책과 Data API 할당량 | STORE_RELEASE Y1·Y2, §5 |
 | Musi, Demus 구현 방식 | 조사에서 "확인 못 함". 근거가 있으면 추가 |
 
 ---

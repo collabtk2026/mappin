@@ -15,6 +15,7 @@ BgPlay 프로젝트의 모든 조사·설계·작업 기록은 이 폴더에 Mar
 
 | 파일 | 내용 |
 |---|---|
+| [HANDOFF.md](HANDOFF.md) | **인수인계(AI/개발자용)**: 현재 상태, 코드 지도, 브리지 프로토콜, 하지 말 것, 백로그 T-xx, 점검 목록. 이어서 작업한다면 가장 먼저 읽을 것 |
 | [LOG.md](LOG.md) | 작업 로그 (시간순) |
 | [OVERVIEW.md](OVERVIEW.md) | 전체 개요: 목표, 현재 기능, 구조, 상태, 다음 단계 |
 | [ENV_PENDING.md](ENV_PENDING.md) | **환경 제약으로 못 한 일과 다른 환경에서 해결하는 절차** (새 환경에서 가장 먼저 볼 것) |
@@ -25,3 +26,4 @@ BgPlay 프로젝트의 모든 조사·설계·작업 기록은 이 폴더에 Mar
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 앱 구조와 플랫폼별 구현 상세 |
 | [TEST_PLAN.md](TEST_PLAN.md) | 자동 테스트와 실기기 체크리스트 |
 | [RISKS.md](RISKS.md) | 배포·정책 리스크 |
+| [STORE_RELEASE.md](STORE_RELEASE.md) | App Store/Google Play 출시 시 심사·정책 문제 체크, 사례, 대응 전략(이중 트랙), 출시 전 체크리스트 |

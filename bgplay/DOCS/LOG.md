@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-11-03 #4 — 스토어 출시 검토 + 인수인계 문서
+
+**요청**
+1. App Store/Google Play 출시 시 문제가 될 수 있는 경우를 체크하고, 피할 방법이나 대안을 사례와 함께 연구해 문서로.
+2. 지금까지 한 일, 앞으로 할 일, 점검할 것을 다른 AI/모델이 읽고 작업할 수 있게 정리.
+
+**한 일**
+- [STORE_RELEASE.md](STORE_RELEASE.md)
+  - Apple 조항(2.3.1, 2.5.2, 2.5.4, 2.5.6, 2.5.19, 4.1, 4.2, 4.2.2, 5.1.1, 5.2.1, 5.2.2, 5.2.3)은 **원문을 직접 확인**하고 우리 앱의 해당 부분과 위험도, 대응을 표로 정리.
+  - Google Play(Device and Network Abuse, WebView 스팸, 상표, FGS 신고, **target API 36(2026-08-31)**, Data safety)와 YouTube 약관·API 정책도 같은 방식으로 정리.
+  - 사례: ProTube, Musi, Kiwi(복귀 조건이 YouTube 백그라운드 재생 비활성화), Brave iOS 2026-06(오프라인 재생 제거 요구), Play 거절 포럼 사례, Vanced, NewPipe/YTPro/NouTube, Facebook Enterprise.
+  - 전략 S1~S4 비교. **권장은 이중 트랙**: 풀 기능은 스토어 밖, 스토어에는 "보관함 우선" `store` 빌드(재생은 공식 앱에 위임).
+  - 스토어 밖 배포 경로: Android 개발자 인증(2026-09 4개국, 2027 전 세계), TestFlight 내부, EU·일본 대체 마켓.
+  - "하면 안 되는 회피 방법"과 이유(계정 해지), 빌드 변형 설계, 출시 전 체크리스트.
+- [DECISIONS D-12](DECISIONS.md): 심사 회피 기법 금지, 이중 트랙.
+- [HANDOFF.md](HANDOFF.md): 다른 AI/개발자용 인수인계. 내용은 시작 순서, 사용자와의 약속, 현재 상태와 커밋, 코드 지도, 브리지 프로토콜, 데이터 모델, 하지 말 것, 실행 명령, **백로그 T-01~T-25**(완료 기준 포함), 점검 목록, 문서 갱신 규칙, 용어.
+- `bgplay/AGENTS.md`(AI 공통 진입점) 추가. CLAUDE.md, DOCS/README, OVERVIEW, RISKS, ENV_PENDING(E-07에 support.google.com 추가)에 연결.
+
+**검증**: 문서 작업만 함(코드 변경 없음). 문서 내부 링크 검사 통과.
+
+**확인 못 한 것**
+- `support.google.com`이 막혀 Play 정책 원문을 못 읽음. G1은 [보도], G2는 [추정]으로 표기 → ENV_PENDING E-07.
+- YouTube 약관과 API 정책 원문, 공증 범위도 미확인.
+
+**남은 일**: HANDOFF §6 백로그.
+
+---
+
 ## 2026-11-03 #3 — 환경 제약으로 못 한 일 정리
 
 **요청**: 환경 제약 때문에 하지 못한 것을 문서에 잘 기록해서, 다른 환경에서 실행할 때 해결할 수 있게 정리.

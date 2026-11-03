@@ -7,12 +7,13 @@ Brave 브라우저의 "백그라운드 동영상 재생" 구현과 비슷한 앱
 - 재생 중인 곡을 **상단 버튼 한 번으로 임시함에 저장**하고, 나중에 **카테고리·태그로 분류**할 수 있습니다.
 
 > **모든 조사·설계·작업 기록은 [DOCS/](DOCS/README.md)에 있습니다.** 처음이라면 [DOCS/OVERVIEW.md](DOCS/OVERVIEW.md)부터 보세요.
+> 이어서 작업하는 AI/개발자는 [DOCS/HANDOFF.md](DOCS/HANDOFF.md)(상태·코드 지도·백로그·점검 목록)를, 스토어 출시를 검토한다면 [DOCS/STORE_RELEASE.md](DOCS/STORE_RELEASE.md)를 보세요.
 >
 > ⚠️ 2026년 1월부터 YouTube가 비 Premium 계정의 모바일 브라우저 백그라운드 재생을 막고 있습니다. 개인 사이드로드 용도이며, 스토어 배포는 권장하지 않습니다([DOCS/RISKS.md](DOCS/RISKS.md)).
 
 ```
 bgplay/
-├─ CLAUDE.md                  # 작업 규칙: 작업할 때마다 DOCS에 기록
+├─ AGENTS.md / CLAUDE.md      # AI 작업 규칙: HANDOFF부터 읽기, 작업할 때마다 DOCS에 기록
 ├─ DOCS/                      # 문서: LOG(작업 로그), OVERVIEW(전체 개요), 주제별 문서
 ├─ shared/js/bgplay.js        # YouTube 페이지 주입 스크립트 (가시성 위장 · 자동 재개 · 브리지 · MediaSession 폴리필)
 ├─ shared/web/library/        # 보관함 UI + 데이터 로직 (임시함 · 분류 시트 · 하나씩 분류 · 카테고리)
