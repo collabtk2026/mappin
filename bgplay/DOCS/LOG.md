@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-11-03 #3 — 환경 제약으로 못 한 일 정리
+
+**요청**: 환경 제약 때문에 하지 못한 것을 문서에 잘 기록해서, 다른 환경에서 실행할 때 해결할 수 있게 정리.
+
+**한 일**
+- [ENV_PENDING.md](ENV_PENDING.md)를 새로 만듦. 항목 E-01~E-09마다 막힌 이유, 필요한 환경, 실행 명령, 예상 오류와 대처, 완료 기준, 결과 기록 위치를 적음.
+  - E-01 Android 실제 빌드
+  - E-02 Android 실기기
+  - E-03 iOS 빌드/실기기
+  - E-04 실제 YouTube 대상 검증
+  - E-05 Android WebView Media Session 지원 여부
+  - E-06 Chromium 엔진 소스 확인
+  - E-07 막힌 웹 출처 원문
+  - E-08 기기 결과가 필요한 결정 4건
+  - E-09 iOS 앱 아이콘, 실기기 스크린샷
+- 다른 환경에서 바로 실행할 스크립트 추가:
+  - `scripts/check-android.sh [--install]`: 공용 테스트 → assembleDebug → APK assets 확인 → lint → (기기) 설치, 서비스/미디어세션/프로세스 덤프, logcat
+  - `scripts/check-ios.sh`: xcodegen → 시뮬레이터 빌드(서명 없음) → 번들 리소스/UIBackgroundModes 확인
+  - `shared/test/live-youtube.mjs`: 실제 m.youtube.com을 Pixel 7 에뮬레이션으로 열어 확인. 확인 항목은 메타데이터·핸들러(A), Media Session 폴리필 경로(B), 실제 탭 숨김 BG 켬/끔(C/D, HEADED), music.youtube.com(E)
+- `CLAUDE.md`에 "새 환경에서는 ENV_PENDING.md부터" 규칙 추가. README(DOCS), OVERVIEW, TEST_PLAN, ARCHITECTURE(Activity 종료 시 hidden 전환 빈틈), bgplay/README에 연결.
+- `.gitignore`: `scripts/out/`, `shared/test/live-report.json`.
+
+**검증**
+- 스크립트 두 개는 `bash -n` 문법 검사만 함(SDK/Xcode 없음).
+- `live-youtube.mjs`는 `node --check` 통과. 실행하면 이 환경에서는 YouTube 차단(`ERR_TUNNEL_CONNECTION_FAILED`)으로 4개 실행이 모두 실패하는데, 실패를 보고서에 정상적으로 남기는 것까지 확인함.
+- 실제 결과는 없음.
+
+**남은 일**: ENV_PENDING.md 권장 순서대로 다른 환경에서 실행.
+
+---
+
 ## 2026-11-03 #2 — 문서 체계 + 사례 조사 + 빠른 저장/보관함 기능
 
 **요청**

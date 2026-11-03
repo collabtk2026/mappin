@@ -12,6 +12,11 @@
 | iOS | 빌드 환경 없음 | 미실행 |
 
 > 이 환경에서 dl.google.com이 막혀 있어 Android SDK/AGP 빌드를 할 수 없다. Mac이나 Android Studio에서 첫 빌드할 때 나오는 오류는 LOG에 기록한다.
+>
+> 다른 환경에서 실행할 스크립트와 절차는 [ENV_PENDING.md](ENV_PENDING.md)에 있다.
+> - `bgplay/scripts/check-android.sh [--install]`: 빌드, lint, 기기 설치, 상태 덤프
+> - `bgplay/scripts/check-ios.sh`: XcodeGen, 시뮬레이터 빌드, 번들 확인
+> - `node bgplay/shared/test/live-youtube.mjs`: 실제 YouTube 대상 검증
 
 ## 1. 실기기 검증 계획 — 백그라운드 재생 (아직 안 함)
 

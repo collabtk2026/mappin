@@ -35,7 +35,12 @@ bgplay/
 ```bash
 node bgplay/shared/test/bgplay.test.mjs      # 주입 스크립트 12개
 node bgplay/shared/test/library.test.mjs     # 보관함 18개 (SHOTS=<dir> 지정 시 스크린샷 저장)
+node bgplay/shared/test/live-youtube.mjs     # 실제 YouTube 대상 (YouTube 접속 가능한 PC에서, HEADED=1 권장)
+bgplay/scripts/check-android.sh [--install]  # Android 빌드·lint·기기 점검
+bgplay/scripts/check-ios.sh                  # iOS 프로젝트 생성·시뮬레이터 빌드
 ```
+
+> 개발 환경의 제약(SDK·Xcode·기기 없음, YouTube 차단) 때문에 마지막 세 개는 아직 실행해 보지 못했습니다. 절차와 판정 기준은 [DOCS/ENV_PENDING.md](DOCS/ENV_PENDING.md)에 있습니다.
 
 ## Android 빌드
 

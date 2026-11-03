@@ -73,6 +73,7 @@
 | `PlayerController.kt` (추가분) | `currentTrack()`, 재생 큐(`playQueue`, `skipNext`/`skipPrev`, `advanceQueue`), `quickSaveFromBackground()`. |
 | `PlaybackService.kt` (추가분) | 알림 액션과 MediaSession custom action "임시 저장". 다음/이전은 큐를 우선한다. |
 
+- **알려진 빈틈**: Activity가 종료되면(최근 앱에서 스와이프 등) WebView가 창에서 떨어지며(`onDetachedFromWindow`) 페이지가 hidden이 될 수 있다. `onWindowVisibilityChanged` 오버라이드로는 이 경우를 막지 못한다. 재생 중 뒤로 가기는 `moveTaskToBack`으로 피하지만, 스와이프 종료 시 동작은 실기기에서 확인해야 한다([ENV_PENDING E-06](ENV_PENDING.md), TEST_PLAN §1-9).
 - BG를 끄면 일반 브라우저처럼 동작한다. `onStop`에서 정지하고 `webView.onPause()`를 부른 뒤 서비스를 종료한다.
 - Android 12 이상은 백그라운드 상태에서 포그라운드 서비스를 시작할 수 없다. 그래서 앱이 보일 때 재생이 시작되는 순간 서비스를 띄우고, 정지 중에도 유지한다(유휴 30분 후 종료).
 

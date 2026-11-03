@@ -56,6 +56,8 @@ bgplay/
 | Android | Kotlin 컴파일 확인. AGP 빌드와 실기기 실행은 아직 안 함(이 환경에 SDK 없음) |
 | iOS | 코드 작성만 함. 빌드는 아직 안 함(Xcode 없음) |
 | 실기기 시나리오 | [TEST_PLAN.md](TEST_PLAN.md) 체크리스트 0/28 |
+| 실제 YouTube 대상 검증 | 스크립트(`shared/test/live-youtube.mjs`)만 준비됨. 이 환경에선 YouTube 차단으로 미실행 |
+| 환경 제약 항목 | [ENV_PENDING.md](ENV_PENDING.md) E-01 ~ E-09, 모두 미해결 |
 
 ## 중요한 제약 (꼭 알아둘 것)
 
@@ -65,6 +67,8 @@ bgplay/
 - WebView 안에서 Google 로그인이 막힐 수 있다. 실기기에서 1순위로 확인해야 한다.
 
 ## 다음 단계
+
+> 환경 때문에 못 한 일(빌드, 실기기, 실제 YouTube 검증 등)과 실행 절차는 **[ENV_PENDING.md](ENV_PENDING.md)**에 정리돼 있다.
 
 1. 실기기 검증: 로그인, 백그라운드 재생(Premium/비 Premium), 보관함 오버레이, **백그라운드 큐 진행**.
 2. 결과에 따라 백그라운드 다음 곡 진행을 보강한다(끝나기 전에 미리 넘기기, 재시도).
