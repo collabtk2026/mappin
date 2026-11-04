@@ -16,6 +16,8 @@ struct HomeView: View {
 
     @State private var detail: BreathingPattern?
     @State private var editor: EditorTarget?
+    /// 상세 시트가 완전히 닫힌 뒤 실행할 동작 (다음 화면 열기)
+    @State private var afterDetailDismiss: (() -> Void)?
 
     private var selected: BreathingPattern {
         patterns.pattern(id: settings.prefs.selectedPatternID) ?? Presets.default
@@ -42,7 +44,11 @@ struct HomeView: View {
             .background(ThemedBackground())
             .toolbar(.hidden, for: .navigationBar)
         }
-        .sheet(item: $detail) { pattern in
+        .sheet(item: $detail, onDismiss: {
+            let next = afterDetailDismiss
+            afterDetailDismiss = nil
+            next?()
+        }) { pattern in
             PatternDetailView(pattern: pattern) { action in
                 handle(action, for: pattern)
             }
@@ -362,24 +368,17 @@ struct HomeView: View {
             settings.prefs.selectedPatternID = pattern.id
             detail = nil
             let length = settings.prefs.sessionLength
-            // 시트가 닫힌 다음 세션 화면을 띄운다
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                router.start(pattern, length: length)
-            }
+            afterDetailDismiss = { router.start(pattern, length: length) }
         case .select:
             settings.prefs.selectedPatternID = pattern.id
             detail = nil
         case .edit:
+            afterDetailDismiss = { editor = EditorTarget(pattern: pattern, isNew: false) }
             detail = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                editor = EditorTarget(pattern: pattern, isNew: false)
-            }
         case .duplicate:
             let copy = patterns.duplicate(pattern)
+            afterDetailDismiss = { editor = EditorTarget(pattern: copy, isNew: false) }
             detail = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                editor = EditorTarget(pattern: copy, isNew: false)
-            }
         case .delete:
             patterns.delete(id: pattern.id)
             if settings.prefs.selectedPatternID == pattern.id {

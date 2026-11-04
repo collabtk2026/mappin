@@ -41,12 +41,14 @@ struct BreathingOrb: View {
                     ZStack {
                         ForEach(0..<6, id: \.self) { i in
                             let angle = Angle.degrees(Double(i) * 60 + time * 6)
-                            let radius = coreSize * 0.16 * (0.35 + 0.65 * level)
+                            let radius: CGFloat = coreSize * 0.16 * CGFloat(0.35 + 0.65 * level)
+                            let dx: CGFloat = CGFloat(cos(angle.radians)) * radius
+                            let dy: CGFloat = CGFloat(sin(angle.radians)) * radius
                             Circle()
                                 .fill(LinearGradient(colors: [theme.orb[1].opacity(0.55), theme.orb[2].opacity(0.25)],
                                                      startPoint: .top, endPoint: .bottom))
                                 .frame(width: coreSize * 0.62, height: coreSize * 0.62)
-                                .offset(x: cos(angle.radians) * radius, y: sin(angle.radians) * radius)
+                                .offset(x: dx, y: dy)
                                 .blendMode(.plusLighter)
                         }
                     }

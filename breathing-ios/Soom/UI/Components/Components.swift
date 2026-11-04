@@ -13,18 +13,23 @@ struct ThemedBackground: View {
             LinearGradient(colors: theme.background, startPoint: .top, endPoint: .bottom)
 
             GeometryReader { geo in
-                let w = geo.size.width
+                let w: CGFloat = geo.size.width
+                let h: CGFloat = geo.size.height
+                let x1: CGFloat = drift ? -w * 0.25 : w * 0.2
+                let y1: CGFloat = drift ? -h * 0.28 : -h * 0.12
+                let x2: CGFloat = drift ? w * 0.3 : -w * 0.15
+                let y2: CGFloat = drift ? h * 0.3 : h * 0.18
                 ZStack {
                     Circle()
                         .fill(theme.orb[2].opacity(0.28))
                         .frame(width: w * 0.9)
                         .blur(radius: 80)
-                        .offset(x: drift ? -w * 0.25 : w * 0.2, y: drift ? -geo.size.height * 0.28 : -geo.size.height * 0.12)
+                        .offset(x: x1, y: y1)
                     Circle()
                         .fill(theme.orb[1].opacity(0.18))
                         .frame(width: w * 0.8)
                         .blur(radius: 90)
-                        .offset(x: drift ? w * 0.3 : -w * 0.15, y: drift ? geo.size.height * 0.3 : geo.size.height * 0.18)
+                        .offset(x: x2, y: y2)
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
             }
