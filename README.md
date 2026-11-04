@@ -18,8 +18,6 @@
 | 07 | [P0 구현 결과](docs/07-p0-report.md) | 구현 기능, 디자인 적용, 테스트 결과(서버 22 · E2E 20), 스크린샷, 남은 한계 |
 | 08 | [개별 서버에 설치하기](docs/08-self-hosting.md) | Docker Compose(PostGIS·API·웹·Caddy HTTPS) 설치, 설정, 업데이트, 백업·복원, 문제 해결 |
 
-> 이 저장소에는 별도 앱인 iPhone 호흡 앱 **숨**도 들어 있습니다 → [`breathing-ios/`](breathing-ios/README.md)
-
 ## 계약과 뼈대
 
 | 경로 | 설명 |
