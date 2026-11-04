@@ -250,7 +250,7 @@ final class PlayerViewController: UIViewController {
             return b
         }
         let name = UILabel()
-        name.text = "BgPlay"
+        name.text = "Youplay"
         name.font = .systemFont(ofSize: 15, weight: .bold)
         name.textColor = .gray
         // ① 탭 한 번 = 임시함 저장 (아무것도 묻지 않음). 길게 누르면 분류 시트.

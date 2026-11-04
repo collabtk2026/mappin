@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">BgPlay</string>
+    <string name="app_name">Youplay</string>
     <string name="channel_name">재생 중</string>
     <string name="channel_desc">백그라운드 재생 컨트롤</string>
     <string name="action_prev">이전</string>

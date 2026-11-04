@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-11-04 #7 — 새 저장소 `collabtk2026/youplay`로 이전, 앱 이름 Youplay
+
+**요청**: 앱을 별도 저장소로 옮김. 앱 이름은 **Youplay**. 사용자가 만든 `youplay` 저장소로 앱 관련 모든 것을 옮기고 거기서 계속 작업.
+
+**한 일**
+- `collabtk2026/youplay`(빈 저장소)에 `bgplay-main`의 이력 10개를 그대로 가져와 `main`으로 둠.
+- 화면에 보이는 이름을 Youplay로 변경: Android `app_name`, iOS `CFBundleDisplayName`, iOS 상단 바 라벨, 잠금화면 기본 제목, 보관함 페이지 `<title>`.
+- 문서의 제품명을 Youplay로 변경. LOG의 과거 기록과 코드 식별자·경로는 그대로 둠. 저장소 위치와 받는 방법 갱신(README, HANDOFF, ENV_PENDING, OVERVIEW).
+- [DECISIONS D-13](DECISIONS.md): 표시 이름만 변경하고 내부 식별자(`io.github.bgplay` 등)는 보류. 이름 상표 검토가 필요하다는 점을 기록. STORE_RELEASE에 A4-1(이름) 추가. HANDOFF: T-19 완료, T-26(정식 앱 ID 확정) 추가.
+
+**검증**: 이 저장소에서 `node shared/test/bgplay.test.mjs` 12/12, `library.test.mjs` 18/18. Info.plist와 strings.xml 형식 확인. 문서 링크 검사 통과. Android/iOS 빌드는 여전히 불가(ENV_PENDING).
+
+**push**: 아래 "push" 줄 참고.
+
+---
+
 ## 2026-11-04 #6 — 보관 위치 확정: `bgplay-main` 브랜치
 
 **요청(선택)**: 사용자가 독립 저장소의 보관 위치로 "mappin 저장소의 별도 브랜치"를 선택함. Mappin 쪽 `bgplay/` 정리는 "선호 없음" → 권장안(제거 후 안내만 남김)을 적용.

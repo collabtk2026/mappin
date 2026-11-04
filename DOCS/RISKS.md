@@ -19,7 +19,7 @@
 | 리스크 | 사례 | 대응 |
 |---|---|---|
 | App Store 사후 삭제 | ProTube(2017, YouTube 요청), Musi(2024 삭제, 2026-03 법원이 Apple의 "with or without cause" 삭제 권한 인정) | iOS는 Xcode 개인 서명이나 TestFlight 같은 비공개 배포를 전제로 한다 |
-| 상표 | Vanced(2022 C&D: 로고·명칭), th-ch/youtube-music → Pear Desktop 개명 | 앱 이름과 아이콘에 YouTube 상표를 쓰지 않는다(현재 "BgPlay", `io.github.bgplay`) |
+| 상표 | Vanced(2022 C&D: 로고·명칭), th-ch/youtube-music → Pear Desktop 개명 | 앱 이름과 아이콘에 YouTube 상표를 쓰지 않는다(현재 "Youplay", `io.github.bgplay`) |
 | YouTube API 정책 | IFrame Player API 약관이 백그라운드 재생을 명시적으로 금지. Play 거절 사례 | IFrame API는 쓰지 않는다(실제 웹사이트를 띄움). 그래도 YouTube 약관 문제는 남는다 |
 | 원격 스크립트 공급망 | YTPro의 `@latest` 원격 로딩, SmartTube 서명키 탈취(2025-12) | 스크립트는 앱에 포함한다([DECISIONS D-04](DECISIONS.md)) |
 | YouTube 페이지 변경 | WebView 래퍼 공통 약점 | DOM 셀렉터보다 Media Session 핸들러를 우선 쓴다. 공용 스크립트 하나만 고치면 되게 한다 |

@@ -36,7 +36,7 @@ final class NowPlayingController {
         c.changePlaybackPositionCommand.isEnabled = info.duration != nil
 
         var d: [String: Any] = [
-            MPMediaItemPropertyTitle: info.title ?? "BgPlay",
+            MPMediaItemPropertyTitle: info.title ?? "Youplay",
             MPNowPlayingInfoPropertyElapsedPlaybackTime: info.position,
             MPNowPlayingInfoPropertyPlaybackRate: info.playing ? info.rate : 0.0,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,

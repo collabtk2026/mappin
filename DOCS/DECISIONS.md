@@ -85,3 +85,15 @@
   - 이번에 만든 핵심 기능(빠른 저장 → 분류)은 재생을 공식 앱에 맡겨도 그대로 쓸모가 있다.
 - **근거와 상세**: [STORE_RELEASE.md](STORE_RELEASE.md)
 - **상태**: 결정만 함. 구현은 HANDOFF T-20~T-25
+
+### D-13 앱 이름을 Youplay로 변경, 내부 식별자는 보류 (2026-11-04)
+- **결정**: 사용자 요청으로 화면에 보이는 앱 이름을 **Youplay**로 바꾼다. 대상은 Android `app_name`, iOS `CFBundleDisplayName`, 상단 바 라벨, 잠금화면 기본 제목, 보관함 페이지 제목, 문서.
+  - 내부 식별자는 그대로 둔다: `io.github.bgplay`(applicationId/번들 ID/패키지), `bgplay.js`, `BgPlayNative`/`__bgplay`/`BgLibNative`, Xcode 타깃·폴더 `BgPlay`, `bgplay://`, 로그 태그.
+- **이유**:
+  - 스토어에 한 번 올린 앱 ID는 바꿀 수 없으므로, 이름 검토(아래)가 끝난 뒤 한 번에 정하는 것이 낫다.
+  - 지금 일괄로 바꾸면 빌드로 확인할 수 없는 환경에서 Android·iOS·공용 코드를 동시에 건드리게 된다(T-26으로 분리).
+- **이름 관련 확인 필요(스토어 출시 전)**:
+  1. "You" + "play" 조합과 빨간 재생 아이콘이 YouTube와 혼동된다는 지적을 받을 수 있다(STORE_RELEASE A4/G3, Apple 5.2.1, Play 사칭 정책).
+  2. 같은 이름의 앱이 이미 있을 수 있다. 사례 조사 중 "YouPlay"라는 네이티브 오디오 추출 앱이 검색됨(CASE_STUDIES §2.2 기타).
+  3. 상표 검색(KIPRIS, USPTO, EUIPO)과 App Store/Play 이름 검색을 한다. 스토어용 빌드는 다른 이름을 쓸 수도 있다(STORE_RELEASE §5 "store" 빌드 이름).
+- **상태**: 표시 이름 변경 완료. ID 확정은 HANDOFF T-26

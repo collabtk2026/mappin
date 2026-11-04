@@ -1,9 +1,10 @@
-> **보관 위치**: `collabtk2026/mappin` 저장소의 **`bgplay-main` 브랜치**(BgPlay만 담긴 독립 이력. Mappin 브랜치들과 공통 조상이 없음).
-> 받기: `git clone -b bgplay-main --single-branch https://github.com/collabtk2026/mappin bgplay`
+> **저장소**: [`collabtk2026/youplay`](https://github.com/collabtk2026/youplay) (기본 브랜치 `main`). 받기: `git clone https://github.com/collabtk2026/youplay`
 >
-> **독립 저장소**: 이 저장소는 BgPlay만 담고 있습니다. 2026-11-03에 `collabtk2026/mappin` 저장소의 `bgplay/` 디렉터리에서 커밋 이력째 분리했습니다([DOCS/LOG.md](DOCS/LOG.md) #5). Mappin(지도 앱)과는 무관합니다.
+> **이력**: 처음에는 `BgPlay`라는 이름으로 `collabtk2026/mappin` 저장소의 `bgplay/` 디렉터리에서 시작했습니다. 2026-11-03에 커밋 이력째 분리(`bgplay-main` 브랜치)했고, 2026-11-04에 이 저장소로 옮기며 앱 이름을 **Youplay**로 바꿨습니다([DOCS/LOG.md](DOCS/LOG.md) #5–#7). Mappin(지도 앱)과는 무관합니다.
+>
+> **내부 식별자**: 패키지/번들 ID `io.github.bgplay`, 파일 `bgplay.js`, 브리지 이름 `BgPlayNative`/`__bgplay`, Xcode 타깃 `BgPlay`, URL 스킴 `bgplay://`는 아직 옛 이름 그대로입니다. 정식 ID는 스토어 출시 전에 정합니다([DOCS/DECISIONS.md](DOCS/DECISIONS.md) D-13).
 
-# BgPlay — 백그라운드 재생 + 빠른 저장 YouTube / YouTube Music 플레이어 (Android · iOS)
+# Youplay — 백그라운드 재생 + 빠른 저장 YouTube / YouTube Music 플레이어 (Android · iOS)
 
 Brave 브라우저의 "백그라운드 동영상 재생" 구현과 비슷한 앱들(YTPro, NouTube 등)을 분석해서, 같은 구조를 **브라우저 포크 없이 앱으로** 만든 프로젝트입니다.
 
@@ -59,7 +60,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 - 첫 실행 시 알림 권한을 허용하세요. 미디어 알림과 잠금화면 컨트롤에 필요합니다.
-- YouTube 앱의 **공유 → BgPlay**로 영상이나 재생목록을 바로 열 수 있습니다.
+- YouTube 앱의 **공유 → Youplay**로 영상이나 재생목록을 바로 열 수 있습니다.
 - 백그라운드 재생 켬/끔과 새로고침은 상단 **⋮** 메뉴에 있습니다.
 - 디버깅: 디버그 빌드에서 PC Chrome의 `chrome://inspect`로 WebView 두 개(YouTube, 보관함)를 모두 확인할 수 있습니다.
 

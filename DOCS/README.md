@@ -1,6 +1,6 @@
-# BgPlay 문서 (DOCS)
+# Youplay 문서 (DOCS)
 
-BgPlay 프로젝트의 모든 조사·설계·작업 기록은 이 폴더에 Markdown으로 남긴다.
+Youplay 프로젝트의 모든 조사·설계·작업 기록은 이 폴더에 Markdown으로 남긴다.
 
 ## 규칙
 

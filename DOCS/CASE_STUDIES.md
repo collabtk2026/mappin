@@ -13,14 +13,14 @@
 
 ## 1. 요약
 
-1. **BgPlay와 같은 구조인 오픈소스 앱이 이미 2개 있음. 둘 다 2026년 10월까지 커밋이 있음.** YTPro(Android 전용)와 **NouTube**(Android+iOS+데스크톱, Expo/React Native)는 m.youtube.com / music.youtube.com을 WebView로 감싸고 백그라운드 재생을 유지함. 특히 NouTube는 차단 이후(2026)의 YouTube 동작을 코드 주석으로 상세히 기록해 두었음. **NouTube의 `content/background-guard.ts`는 BgPlay 설계에 가장 직접 참고할 코드임.** [소스 확인]
+1. **Youplay와 같은 구조인 오픈소스 앱이 이미 2개 있음. 둘 다 2026년 10월까지 커밋이 있음.** YTPro(Android 전용)와 **NouTube**(Android+iOS+데스크톱, Expo/React Native)는 m.youtube.com / music.youtube.com을 WebView로 감싸고 백그라운드 재생을 유지함. 특히 NouTube는 차단 이후(2026)의 YouTube 동작을 코드 주석으로 상세히 기록해 두었음. **NouTube의 `content/background-guard.ts`는 Youplay 설계에 가장 직접 참고할 코드임.** [소스 확인]
 2. **Android는 JS 위장만으로 부족함. 네이티브 쪽에서 `WebView.onWindowVisibilityChanged()`를 덮어써 항상 VISIBLE을 넘기는 방식이 공통 패턴임**(YTPro, NouTube). NouTube는 여기에 `setRendererPriorityPolicy(RENDERER_PRIORITY_IMPORTANT, false)`를 더해, 백그라운드에서 렌더러 프로세스가 cached 우선순위로 떨어져 죽는 문제(#309)를 막음. [소스 확인]
 3. **Visibility 위장만으로는 2026년 이후 YouTube를 막을 수 없음. "YouTube가 건 pause인지, 사용자가 건 pause인지"를 구분해 YouTube 쪽 pause만 되돌리는 guard가 필요함.** NouTube는 5초마다 polling해 `movie_player.getPlayerState()`를 확인하고, 사용자가 요청하지 않은 pause면 `playVideo()`를 최대 3회 다시 시도함. 이때 "계속 시청하시겠습니까?" 대화상자는 버튼이 1개일 때만 자동으로 누르고, 통화나 다른 앱이 오디오를 가져간 상태(AudioManager)에서는 재개하지 않음. FixYTBackground(2026-02)는 같은 목적을 `HTMLMediaElement.prototype.pause` 가로채기, 무작위 키/포인터 입력, 곡 종료 4초 전 다음 곡 미리 클릭으로 해결함. [소스 확인]
 4. **iOS(WKWebView) 쪽 함정**: 앱이 백그라운드로 가는 순간 WebKit이 페이지를 hidden으로 바꿈. 또 잠금화면/이어폰 버튼 입력은 앱이 아니라 **페이지의 Media Session 핸들러로 직접 전달됨.** 그래서 `navigator.mediaSession.setActionHandler`를 document-start에서 감싸야 사용자의 pause를 식별할 수 있음. 이 패치는 WebKit이 `navigator.mediaSession` JS wrapper를 GC하면 함께 사라지므로 참조를 붙잡아 두어야 함(NouTube 주석). [소스 확인]
 5. **Android System WebView에는 `navigator.mediaSession`이 없는 것으로 보임.** YTPro는 `if (!('mediaSession' in navigator))`일 때 polyfill을 정의해 YouTube가 넣는 metadata와 action handler를 가로채고, 이를 네이티브 MediaSession과 MediaStyle 알림으로 넘김. NouTube는 플레이어의 `videoDetails`를 직접 읽어 `NouTubeI.notify()`로 보냄. WebView에 API가 없다는 점은 코드에서 추론한 것이고 공식 문서로는 확인 못 함. [소스 확인/추론]
 6. **정책 이력상 App Store 배포 위험이 매우 높음.** ProTube는 2017년 YouTube 요청으로 내려감. Musi는 2024년 YouTube 법무팀 불만 접수 후 삭제됐고, 2026-03 법원은 Apple이 "with or without cause" 삭제할 수 있다고 판결함. Vanced는 2022년 Google의 cease-and-desist(로고·YouTube 언급 제거 요구) 후 중단함. th-ch/youtube-music은 **Pear Desktop**으로 이름을 바꾸고 package.json의 이름 문자열까지 유니코드 escape로 숨김. YouTube API 정책은 "background play 허용"을 명시적으로 금지함. NouTube도 iOS는 TestFlight로만 배포 중임. [공식/보도/소스 확인]
 7. **네이티브 추출형 클라이언트는 2025–2026년 SABR, PoToken, BotGuard 대응에 시간을 크게 쓰고 있음.** 그 사이 Tubular·OuterTune은 중단을 선언했고 ViMusic은 2023년 이후 정지, 공개 Piped 인스턴스는 사실상 소멸함. 반면 실제 웹사이트를 그대로 띄우는 WebView 방식은 추출과 서명 해독 부담이 없음. 대신 YouTube 페이지의 DOM과 JS가 바뀌는 데 취약함. [소스 확인/보도]
-8. **Part B 시사점**: YouTube/YT Music/Spotify 모두 "**원탭 저장 → 저장 위치를 알려주는 스낵바 → '변경' 버튼**"으로 바뀌었음(마지막 사용 목록 기억). 오픈소스 쪽에는 이미 담긴 목록 회색 처리와 중복 대화상자(NewPipe/Metrolist), 5초 undo 토스트(NouTube), 최근 수정순 정렬(Metrolist)이 구현돼 있음. BgPlay의 "임시함" 설계에는 이 패턴들에 GTD/Todoist의 "수집과 정리 분리, 주기적 처리"를 합치는 것을 권장함(4장).
+8. **Part B 시사점**: YouTube/YT Music/Spotify 모두 "**원탭 저장 → 저장 위치를 알려주는 스낵바 → '변경' 버튼**"으로 바뀌었음(마지막 사용 목록 기억). 오픈소스 쪽에는 이미 담긴 목록 회색 처리와 중복 대화상자(NewPipe/Metrolist), 5초 undo 토스트(NouTube), 최근 수정순 정렬(Metrolist)이 구현돼 있음. Youplay의 "임시함" 설계에는 이 패턴들에 GTD/Todoist의 "수집과 정리 분리, 주기적 처리"를 합치는 것을 권장함(4장).
 
 ---
 
@@ -71,7 +71,7 @@ HTMLMediaElement.prototype.pause = function () {
   - 30–60초 간격으로, 실제로 hidden일 때만 Shift/Ctrl/Alt keydown 또는 pointermove를 보냄(keep-alive). 숨겨지는 순간(visibilitychange)에도 3회 연속 ping을 보냄.
   - 3초마다 `v.paused && !userPaused`이면 `play()`를 호출함.
   - **곡 종료 4초 전에 다음 곡을 미리 클릭함(pre-advance)**. `ytm-playlist-panel-video-renderer[aria-selected]`의 다음 형제나 `player-middle-controls-prev-next-button`을 누르고, 7초 안에 videoId가 바뀌지 않으면 최대 3회 재시도함. 주석상 이유는 "background 탭에서 `ended`가 늦게 발생"하기 때문임.
-- **BgPlay 시사점**: 백그라운드에서 다음 곡으로 넘어가지 않는 문제(Brave 버그 보고와 같은 증상)에 대비해 pre-advance와 재시도 로직이 필요함.
+- **Youplay 시사점**: 백그라운드에서 다음 곡으로 넘어가지 않는 문제(Brave 버그 보고와 같은 증상)에 대비해 pre-advance와 재시도 로직이 필요함.
 
 ### 2.2 Android WebView 래퍼
 
@@ -131,14 +131,14 @@ Object.defineProperty(document, 'visibilityState', { configurable: true, get: fu
   document.addEventListener(type, function (e) { e.stopImmediatePropagation() }, true) })
 ```
    `UIApplication.didEnterBackgroundNotification`과 `willEnterForegroundNotification`으로 실제 상태를 `window.NouTubeBackground`에 반영함. 구성은 `allowsInlineMediaPlayback = true`, `mediaTypesRequiringUserActionForPlayback = []`, `allowsPictureInPictureMediaPlayback = true`. **FixYTBackground와 달리 `blur`/`pagehide`는 막지 않음**(YouTube 자체 정리 로직에 필요하다는 이유).
-3. **Background guard** (`content/background-guard.ts`): **BgPlay에 가장 직접 참고할 코드**
+3. **Background guard** (`content/background-guard.ts`): **Youplay에 가장 직접 참고할 코드**
    - 맨 위 주석: "mobile web pauses for non-premium users when it believes the page is hidden, and inactivity prompts ('Video paused. Continue watching?', ytmusic-you-there-renderer) pause after a few hours."
    - `guardMediaSessionHandlers()`: document-start에서 `navigator.mediaSession.setActionHandler`를 감싸 play/pause가 들어올 때 `appPaused`를 갱신함. `window.__nouMediaSession = session`으로 참조를 유지하는 이유는 주석대로 "WebKit can collect the JS wrapper for navigator.mediaSession… the patch goes with it"임.
    - 네이티브 `NouTube.pause()/play()`도 감싸 알림, 블루투스, 슬립 타이머로 온 pause를 기록함. 포그라운드에서 YouTube UI로 누른 pause는 capture 단계의 `pause` 이벤트로 기록함.
    - 5초 polling 조건은 `isBackground() && state===PAUSED && wasPlaying && !appPaused && !pausedByInterruption`임. 이 조건이면 `confirmYouThereDialogs()`(버튼이 정확히 1개일 때만 click)를 실행한 뒤 `player.playVideo()`를 부름. 최대 3회 시도함.
    - 재개 전에는 `NouTubeI.canAutoResume()`을 확인함. Android 구현은 `audioManager.mode == MODE_NORMAL && !audioManager.isMusicActive`이고, 6틱(30초) 연속 막히면 "인터럽션"으로 보고 포기함.
 4. **알림과 메타데이터**: Android `NouService`는 `MediaSessionCompat` + `androidx.media.app.NotificationCompat.MediaStyle` + `startForeground(..., FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)` 구성임. "startForegroundService 5초 deadline" 처리 주석도 있음. 메타데이터는 `content/player.ts`가 플레이어 `videoDetails`(title, author, lengthSeconds, thumbnail)를 읽어 `window.NouTubeI.notify(...)`로 보내고, 진행 상황은 `timeupdate`를 throttle해 `notifyProgress`로 보냄. iOS `NouNowPlaying.swift`는 `AVAudioSession.setCategory(.playback, mode: .moviePlayback)`로 설정하고, interruption `.ended` 때 `setActive(true)`로 세션을 다시 잡음. `MPNowPlayingInfoCenter`와 `MPRemoteCommandCenter`의 명령은 JS 실행으로 연결함.
-5. JS 브리지에는 `NouTubeToken`(bridge token) 검증이 있음. 페이지 안의 임의 스크립트가 네이티브 API를 호출하지 못하게 하려는 장치이며, BgPlay도 도입할 가치가 있음.
+5. JS 브리지에는 `NouTubeToken`(bridge token) 검증이 있음. 페이지 안의 임의 스크립트가 네이티브 API를 호출하지 못하게 하려는 장치이며, Youplay도 도입할 가치가 있음.
 
 #### 기타
 - `pierfrancescosoffritti/android-youtube-player`: IFrame Player API를 WebView에 띄우는 라이브러리이고 앱이 아님. IFrame API를 쓰면 API 약관(백그라운드 재생 금지)이 바로 적용됨 [보도].
@@ -207,7 +207,7 @@ move-result v$register
 |---|---|---|---|---|---|---|
 | 브라우저 내장/스크립트 | Brave, Samsung Internet, Vivaldi, Edge, (Opera) | 브라우저 레벨 visibility 위장, 스크립틀릿 | 사용자 계정 그대로, Premium이면 공식 지원 | **높음**: 2026-01 서버 측 차단 이후 업데이트 경쟁 | 브라우저 자체는 가능 | 2026-01 YouTube "Premium 전용" 일관화 |
 | 브라우저 확장 | video-bg-play, Backstage Play, NouTube 확장 | content script(document_start, MAIN world)로 Visibility 위장, 이벤트 차단, pause 가로채기, 입력 ping, pre-advance | 계정 그대로 | 중~높음: DOM 셀렉터와 YouTube 로직 변경 | AMO 배포 중 | 직접 조치 사례 없음(확인 못 함) |
-| **WebView 래퍼 (BgPlay 해당)** | YTPro, NouTube | 네이티브 `onWindowVisibilityChanged` 차단(Android), WKUserScript 위장(iOS), FGS + MediaSession, background guard(자동 재개), 렌더러 우선순위 | 실제 사이트 로그인, Premium이면 정당한 백그라운드 재생 | 중~높음: 페이지 JS/DOM 변경, 서버 측 판정 강화 | Play/App Store 위험 큼. 현재 F-Droid/GitHub/TestFlight로 배포 | 래퍼 자체에 대한 공개 조치 보도는 찾지 못함. 유사 사례 ProTube·Musi 삭제 |
+| **WebView 래퍼 (Youplay 해당)** | YTPro, NouTube | 네이티브 `onWindowVisibilityChanged` 차단(Android), WKUserScript 위장(iOS), FGS + MediaSession, background guard(자동 재개), 렌더러 우선순위 | 실제 사이트 로그인, Premium이면 정당한 백그라운드 재생 | 중~높음: 페이지 JS/DOM 변경, 서버 측 판정 강화 | Play/App Store 위험 큼. 현재 F-Droid/GitHub/TestFlight로 배포 | 래퍼 자체에 대한 공개 조치 보도는 찾지 못함. 유사 사례 ProTube·Musi 삭제 |
 | IFrame Player API 앱 | (과거) 각종 "백그라운드 플레이어", android-youtube-player 이용 앱 | IFrame + 오디오 세션 | 대개 무로그인 | 중 | **API 정책상 백그라운드 재생 금지** 명시 | Play 거절 사례 [보도] |
 | iOS 스토어 래퍼/클라이언트 | ProTube(2017), Musi(2016–2024) | (확인 못 함: 자체 플레이어/embed) | 무로그인 위주 | — | 삭제됨 | YouTube 요청 → Apple 삭제. 2026-03 Apple 승소 |
 | Electron 데스크톱 | Pear Desktop(구 th-ch/youtube-music) | 데스크톱 웹은 hidden에도 재생되므로 위장 불필요 | 계정 그대로 | 낮음~중 | GitHub, 패키지 매니저 | 상표 회피로 개명 |
@@ -217,7 +217,7 @@ move-result v$register
 
 ---
 
-## 4. Part B: 저장/정리 UX 패턴과 BgPlay 권고
+## 4. Part B: 저장/정리 UX 패턴과 Youplay 권고
 
 ### 4.1 앱별 관찰
 
@@ -245,7 +245,7 @@ move-result v$register
 7. **수집과 정리의 분리, 주기적 처리**(GTD, Todoist): 인박스는 비우는 것이 목표인 임시 공간임.
 8. **내보내기/백업은 필수**(NewPipe DB export, Metrolist Backup). Pocket 종료 사례가 보여주듯 사용자 데이터를 빼낼 수단이 있어야 함.
 
-### 4.3 BgPlay "임시 저장 → 나중에 분류" 구체 권고
+### 4.3 Youplay "임시 저장 → 나중에 분류" 구체 권고
 
 > **편집 주**: 이 권고를 어떻게 적용했는지(적용/보류/변경)는 [FEATURE_PLAYLIST.md §2](FEATURE_PLAYLIST.md)의 표에 정리했다.
 
@@ -254,7 +254,7 @@ move-result v$register
   - 앱 내 플로팅 "임시함에 저장" 버튼
   - **Android MediaStyle 알림의 custom action**(예: 북마크 아이콘, compact view의 3번째 슬롯)
   - **iOS `MPRemoteCommandCenter.bookmarkCommand` 또는 `likeCommand`**(잠금화면/제어센터. 플랫폼이 노출하는 명령 중 하나이며 실제 노출 위치는 기기 테스트 필요)
-  - Android 공유 인텐트, iOS Share Extension("YouTube 앱에서 공유 → BgPlay 임시함")
+  - Android 공유 인텐트, iOS Share Extension("YouTube 앱에서 공유 → Youplay 임시함")
 - 저장 즉시 스낵바 **"임시함에 저장됨 · [분류] · [실행취소]"**를 5초간 보여줌. [분류]는 카테고리 시트를 엶. 백그라운드에서 저장했다면 알림 액션 아이콘을 체크 상태로 바꾸는 것으로 피드백함(Spotify 체크 패턴).
 - **길게 누르면** 바로 분류 시트를 엶. 상단은 MRU 5개 카테고리, 그다음 태그 칩, 검색, "새 카테고리"로 구성함.
 - 함께 저장할 맥락은 `videoId`(정규화 키), title, artist/channel, thumbnail URL, duration, **저장 시점의 재생 위치(currentTime)**, 출처(music/m, 재생 중이던 재생목록 ID), savedAt, 저장 경로(notification/in-app/share)임. 메타데이터는 이미 MediaSession 갱신용으로 수집하고 있으므로(NouTube `videoDetails` 방식) 그대로 재사용함.

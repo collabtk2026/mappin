@@ -1,6 +1,6 @@
-# AGENTS.md — BgPlay (AI 에이전트 공통 안내)
+# AGENTS.md — Youplay (AI 에이전트 공통 안내)
 
-이 저장소(BgPlay)는 YouTube/YouTube Music을 앱 안에서 재생하는 프로젝트다. 백그라운드 재생, 그리고 "빠른 저장 → 나중에 분류" 보관함을 갖춘 Android/iOS 앱이다.
+이 저장소(Youplay)는 YouTube/YouTube Music을 앱 안에서 재생하는 프로젝트다. 백그라운드 재생, 그리고 "빠른 저장 → 나중에 분류" 보관함을 갖춘 Android/iOS 앱이다.
 
 **먼저 읽을 것: [DOCS/HANDOFF.md](DOCS/HANDOFF.md)**. 현재 상태, 코드 지도, 하지 말 것, 백로그(T-xx), 점검 목록이 있다.
 

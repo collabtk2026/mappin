@@ -1,4 +1,4 @@
-# BgPlay 작업 규칙
+# Youplay 작업 규칙
 
 > 공통 안내는 [AGENTS.md](AGENTS.md), 인수인계 문서는 [DOCS/HANDOFF.md](DOCS/HANDOFF.md)(현재 상태, 코드 지도, 백로그, 점검 목록)에 있다. 작업을 시작하기 전에 HANDOFF부터 읽는다.
 

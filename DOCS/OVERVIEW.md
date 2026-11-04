@@ -1,4 +1,6 @@
-# BgPlay 전체 개요
+# Youplay 전체 개요
+
+> 앱 이름: **Youplay**(구 BgPlay, 2026-11-04 변경). 저장소: [`collabtk2026/youplay`](https://github.com/collabtk2026/youplay)
 
 > 문서 목록: [README](README.md) · [작업 로그](LOG.md) · 마지막 갱신: 2026-11-03
 
@@ -79,4 +81,4 @@ bgplay/  (저장소 루트)
 3. iOS 잠금화면 저장(`bookmarkCommand`), Share Extension.
 4. Android PiP.
 5. 자동 로컬 백업, 휴지통.
-6. ~~독립 저장소로 분리~~ → 완료. `collabtk2026/mappin`의 `bgplay-main` 브랜치에 보관(LOG #5·#6). 별도 GitHub 저장소 이전은 선택(HANDOFF T-19).
+6. ~~독립 저장소로 분리~~ → 완료. [`collabtk2026/youplay`](https://github.com/collabtk2026/youplay)로 이전(LOG #7). 정식 앱 ID 확정은 HANDOFF T-26.

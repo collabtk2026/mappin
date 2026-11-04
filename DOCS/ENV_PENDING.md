@@ -36,7 +36,7 @@
 
 ## 1. 환경 준비 체크리스트
 
-- [ ] 저장소 받기: `git clone -b bgplay-main --single-branch https://github.com/collabtk2026/mappin bgplay`(또는 `git clone bgplay.bundle bgplay`). 이하 모든 경로는 저장소 루트 기준이다.
+- [ ] 저장소 받기: `git clone https://github.com/collabtk2026/youplay` 이하 모든 경로는 저장소 루트 기준이다.
 - [ ] Node 22+, `npm i -g playwright` 또는 저장소 밖에서 `npx playwright install chromium`
   - 공용 테스트는 `require('playwright')`를 쓴다. 전역 설치나 `NODE_PATH`를 맞춘다.
 - [ ] **Android**: Android Studio(최신), SDK Platform 35, Build-Tools, JDK 17+, USB 디버깅을 켠 기기

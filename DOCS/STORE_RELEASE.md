@@ -15,7 +15,7 @@
 | **지금 형태 그대로 출시할 수 있나?** | **거의 확실히 안 된다.** 지금 형태란 YouTube 전용 WebView 래퍼에 백그라운드 재생 위장이 들어간 것이다. Apple은 5.2.2/5.2.3(제3자 서비스 약관, YouTube를 명시)과 4.2(웹사이트 재포장)에 걸린다. Google Play는 YouTube 백그라운드 재생으로 거절된 사례가 반복된다(Device and Network Abuse). 통과하더라도 YouTube가 신고하면 사후 삭제된다(ProTube 2017, Musi 2024). |
 | **심사를 "피해 가는" 방법이 있나?** | 심사 때 기능을 숨기거나 출시 후 원격으로 켜는 방법은 **하면 안 된다.** 이는 Apple 2.5.19, 2.3.1 위반이고 **개발자 계정 전체가 해지**된다. 이 문서는 그런 방법을 다루지 않는다(§4). |
 | **정당하게 스토어에 낼 수 있는 길은?** | ① **보관함 우선 앱(S1)**: 빠른 저장·분류는 우리 앱, 재생은 공식 YouTube/YT Music 앱에 넘긴다. 심사 위험이 가장 낮고, 이번에 만든 핵심 기능이 그대로 산다. ② **범용 브라우저(S2, Brave형)**: 위험이 중간이고 개발량이 크다. ③ **스토어 밖 배포(S4)**: 개인용이라면 이것이 현실적이다. |
-| **추천** | **이중 트랙**이다. 개인용 풀 기능은 스토어 밖(사이드로드/TestFlight 내부)으로 쓰고, 스토어에는 백그라운드 위장이 없는 **"BgPlay Library"(S1) 빌드**를 낸다. 코드는 빌드 변형(flavor/scheme)으로 나눈다(§5). |
+| **추천** | **이중 트랙**이다. 개인용 풀 기능은 스토어 밖(사이드로드/TestFlight 내부)으로 쓰고, 스토어에는 백그라운드 위장이 없는 **"Youplay Library"(S1) 빌드**를 낸다. 코드는 빌드 변형(flavor/scheme)으로 나눈다(§5). |
 
 ---
 
@@ -28,7 +28,8 @@
 | A1 | **5.2.2 Third-Party Sites/Services** | "If your app uses, accesses, monetizes access to, or displays content from a third-party service, ensure that you are specifically permitted to do so under the service's terms of use. Authorization must be provided upon request." | 앱 전체가 YouTube 콘텐츠를 표시함. 백그라운드 재생은 YouTube 약관상 Premium 기능 | **매우 높음** | S1(공식 앱으로 재생 위임) 또는 S2(범용 브라우저). YouTube 허가는 현실적으로 얻기 어렵다 |
 | A2 | **5.2.3 Audio/Video Downloading** | "…the ability to save, convert, or download media from third-party sources (such as Apple Music, **YouTube**, …) without explicit authorization… **Streaming of audio/video content may also violate Terms of Use**…" | 다운로드 기능은 없음(유지할 것). 다만 "스트리밍도 약관 위반일 수 있다"는 문구가 백그라운드 재생에 적용될 수 있음 | 높음 | 오프라인 저장이나 스트림 추출은 절대 넣지 않음. Brave도 2026-06 Apple 요구로 Playlist 오프라인 재생을 제거함(§2) |
 | A3 | **4.2 Minimum Functionality / 4.2.2** | "…elevate it beyond a repackaged website…", "…shouldn't primarily be… web clippings, content aggregators, or a collection of links." | m.youtube.com을 감싼 형태 | 높음 | 보관함, 분류, 큐, 잠금화면 같은 네이티브 기능을 앞세움. S1은 이 문제가 없음 |
-| A4 | **5.2.1 Intellectual Property**, 4.1 Copycats | 허가 없는 상표, 오해를 부르는 이름·메타데이터 금지 | 앱 이름, 아이콘, 스크린샷, 키워드에 "YouTube"나 빨간 재생 버튼 | 중간 | "BgPlay" 이름 유지. 스토어 설명에서 YouTube는 "~와 함께 사용" 수준으로만 언급하고 로고는 쓰지 않음. 아이콘은 YouTube와 다르게(현재 아이콘의 빨간 삼각형은 바꾸는 것을 권장) |
+| A4 | **5.2.1 Intellectual Property**, 4.1 Copycats | 허가 없는 상표, 오해를 부르는 이름·메타데이터 금지 | 앱 이름, 아이콘, 스크린샷, 키워드에 "YouTube"나 빨간 재생 버튼 | 중간 | "Youplay" 이름 유지. 스토어 설명에서 YouTube는 "~와 함께 사용" 수준으로만 언급하고 로고는 쓰지 않음. 아이콘은 YouTube와 다르게(현재 아이콘의 빨간 삼각형은 바꾸는 것을 권장) |
+| A4-1 | (이름) | 앱 이름 **Youplay**(2026-11-04 변경) | "You"+"play"와 빨간 재생 아이콘이 YouTube를 연상시킬 수 있음. 같은 이름의 기존 앱이 있을 수 있음 | 중간 | 출시 전 상표·스토어 이름 검색. 필요하면 스토어 빌드에 다른 이름 사용([DECISIONS D-13](DECISIONS.md)) |
 | A5 | **2.5.4 Background services** | "Multitasking apps may only use background services for their intended purposes: VoIP, audio playback…" | `UIBackgroundModes: audio` | 낮음~중간 | 실제 오디오 재생에만 쓰면 조항 자체는 충족. 단 A1·A2와 함께 묶여 판단됨 |
 | A6 | **2.5.19 Hidden features**, **2.3.1** | 숨겨진·휴면·문서화 안 된 기능 금지("termination of your developer account"). 모든 기능을 심사 노트에 구체적으로 적을 것 | (해당 없음, 해서는 안 됨) | — | 스토어 빌드에 없는 기능은 코드에서도 빼고, 원격 플래그로 켜지 않음 |
 | A7 | **2.5.2** Downloading code | 기능을 바꾸는 코드를 내려받아 실행 금지 | `bgplay.js`는 번들에 포함(D-04). 원격 스크립트 없음 | 낮음 | 유지. YTPro식 `@latest` 원격 로딩은 금지 |
@@ -108,7 +109,7 @@ S3은 수정은 적지만 거절 사유의 핵심(WebView 래퍼, 제3자 약관
 
 ## 4. 하면 안 되는 "회피" 방법과 이유
 
-아래는 사례와 정책에 나오는 "심사 회피" 방법이다. **BgPlay에서는 쓰지 않는다**(결정 [D-12](DECISIONS.md)).
+아래는 사례와 정책에 나오는 "심사 회피" 방법이다. **Youplay에서는 쓰지 않는다**(결정 [D-12](DECISIONS.md)).
 
 | 방법 | 위반 | 결과(사례) |
 |---|---|---|
@@ -128,13 +129,13 @@ S3은 수정은 적지만 거절 사유의 핵심(WebView 래퍼, 제3자 약관
 
 | 항목 | `full`(개인/사이드로드, 현재) | `store`(App Store / Play) |
 |---|---|---|
-| 앱 이름 | BgPlay | BgPlay Library(가칭) |
+| 앱 이름 | Youplay | Youplay Library(가칭) |
 | `bgplay.js` 가시성 위장, 엔진 정지 자동 재개 | 켬(설정) | **코드에서 제외**(설정 토글도 없음) |
 | Android `BackgroundWebView` 가시성 신호 차단 | 켬 | **제외**. 백그라운드로 가면 `webView.onPause()`와 정지 |
 | 재생 위치 | 앱 내 WebView | **공식 YouTube/YT Music 앱으로 열기**(아래). 앱 내 WebView는 사용하지 않거나 포그라운드 미리보기로만 |
 | `PlaybackService`, `UIBackgroundModes: audio` | 있음 | **제거**(앱이 오디오를 재생하지 않음) |
 | 보관함(빠른 저장, 분류, 임시함, 하나씩 분류) | 있음 | **있음(핵심 기능)** |
-| 저장 진입점 | 상단 버튼, 알림 | **공유 시트**(YouTube 앱 → 공유 → BgPlay): Android `ACTION_SEND`(구현됨), iOS Share Extension(신규) |
+| 저장 진입점 | 상단 버튼, 알림 | **공유 시트**(YouTube 앱 → 공유 → Youplay): Android `ACTION_SEND`(구현됨), iOS Share Extension(신규) |
 | YouTube 재생목록 동기화 | 없음 | 선택: YouTube Data API(OAuth). 카테고리 → 사용자 YouTube 재생목록 |
 
 **공식 앱으로 넘기기**
