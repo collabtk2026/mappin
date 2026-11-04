@@ -14,6 +14,10 @@ info:
     - 낙관적 잠금: 응답 `ETag: "<version>"`, 수정 시 `If-Match` 필수 → 불일치 시 412.
     - 멱등성: 모든 POST는 `Idempotency-Key` 헤더 지원.
     - 오류: RFC 9457 `application/problem+json`.
+
+    ## 구현 상태
+    `x-status: planned`(요약에 **[P1 예정]**)가 붙은 오퍼레이션(친구·동기화·가져오기)은 계약만 정해 둔 것이며 서버에 아직 없다
+    (`/import`는 501 응답). 나머지는 P0에서 구현·테스트됨.
   license:
     name: Proprietary
 servers:
@@ -1106,8 +1110,9 @@ paths:
   /friends:
     get:
       operationId: listFriends
+      x-status: planned
       tags: [Friends]
-      summary: 친구 목록
+      summary: '[P1 예정] 친구 목록'
       responses:
         '200':
           description: OK
@@ -1122,8 +1127,9 @@ paths:
   /friends/requests:
     get:
       operationId: listFriendRequests
+      x-status: planned
       tags: [Friends]
-      summary: 받은/보낸 친구 요청
+      summary: '[P1 예정] 받은/보낸 친구 요청'
       parameters:
         - name: direction
           in: query
@@ -1141,8 +1147,9 @@ paths:
                     items: { $ref: '#/components/schemas/FriendRequest' }
     post:
       operationId: createFriendRequest
+      x-status: planned
       tags: [Friends]
-      summary: 친구 요청 (handle 또는 이메일)
+      summary: '[P1 예정] 친구 요청 (handle 또는 이메일)'
       requestBody:
         required: true
         content:
@@ -1161,8 +1168,9 @@ paths:
   /friends/requests/{userId}/{action}:
     post:
       operationId: respondFriendRequest
+      x-status: planned
       tags: [Friends]
-      summary: 친구 요청 수락/거절
+      summary: '[P1 예정] 친구 요청 수락/거절'
       parameters:
         - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
         - { name: action, in: path, required: true, schema: { type: string, enum: [accept, decline] } }
@@ -1171,8 +1179,9 @@ paths:
   /friends/{userId}:
     delete:
       operationId: deleteFriend
+      x-status: planned
       tags: [Friends]
-      summary: 친구 삭제 (해당 사용자와의 공유도 회수 옵션)
+      summary: '[P1 예정] 친구 삭제 (해당 사용자와의 공유도 회수 옵션)'
       parameters:
         - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
         - { name: revoke_shares, in: query, schema: { type: boolean, default: true } }
@@ -1183,8 +1192,9 @@ paths:
   /sync/changes:
     get:
       operationId: getChanges
+      x-status: planned
       tags: [Sync]
-      summary: 변경 피드 (오프라인 캐시 동기화)
+      summary: '[P1 예정] 변경 피드 (오프라인 캐시 동기화)'
       parameters:
         - name: cursor
           in: query
@@ -1215,8 +1225,9 @@ paths:
   /sync/push:
     post:
       operationId: pushMutations
+      x-status: planned
       tags: [Sync]
-      summary: 오프라인 변경 일괄 업로드
+      summary: '[P1 예정] 오프라인 변경 일괄 업로드'
       requestBody:
         required: true
         content:
@@ -1272,8 +1283,9 @@ paths:
   /import:
     post:
       operationId: createImport
+      x-status: planned
       tags: [Export]
-      summary: 가져오기 (GeoJSON/CSV/KML/GPX 업로드)
+      summary: '[P1 예정] 가져오기 (GeoJSON/CSV/KML/GPX 업로드)'
       requestBody:
         required: true
         content:

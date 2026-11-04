@@ -1,9 +1,9 @@
 /**
  * @mappin/map-core — 지도 공급자 독립 인터페이스.
- * UI(웹/RN)는 이 타입만 의존하고, 실제 SDK 호출은 공급자별 어댑터 패키지가 담당한다.
- *   - packages/map-web-kakao     : Kakao Maps JS SDK
- *   - packages/map-web-maplibre  : MapLibre GL JS (+ OSM 벡터타일)
- *   - packages/map-native        : RN (Kakao/Naver/MapLibre) — P1
+ * UI(웹/RN)는 이 타입만 의존하고, 실제 SDK 호출은 공급자별 어댑터가 담당한다.
+ *   - apps/web/src/map/maplibre.ts : MapLibre GL JS (+ OSM 벡터타일)
+ *   - apps/web/src/map/kakao.ts    : Kakao Maps JS SDK
+ *   - RN 어댑터 (Kakao/Naver/MapLibre) — P1
  */
 
 export type ProviderId = 'kakao' | 'naver' | 'maplibre' | 'google';

@@ -7,7 +7,7 @@
 │ Web (Next.js)│   │ iOS (Expo RN)    │   │ Android (Expo RN)│
 │ MapLibre/Kakao│  │ Kakao|Naver SDK  │   │ Kakao|Naver SDK  │
 └──────┬───────┘   └────────┬─────────┘   └────────┬─────────┘
-       │  공통 패키지: @mappin/api-client · @mappin/domain · @mappin/map-core
+       │  공통 패키지: @mappin/api-client · @mappin/map-core
        └───────────────┬────────────┴─────────────────────┘
                        │ HTTPS  REST /v1  (OpenAPI 3.1 = 단일 계약)
               ┌────────▼─────────┐
@@ -33,35 +33,36 @@
 | API 계약 | **OpenAPI 3.1** (`api/openapi.yaml`) | 계약을 먼저 정하고 코드를 만든다(contract-first). TS 클라이언트를 생성하고, 나중에 Swift/Kotlin 네이티브로 가도 같은 명세에서 클라이언트를 생성한다 |
 | 서버 | Fastify + Zod (+ `fastify-type-provider-zod`) | 가볍고 빠르다. Zod 스키마와 OpenAPI를 서로 맞물려 검증할 수 있다 |
 | DB | PostgreSQL 16 + **PostGIS** | bbox·반경 조회와 클러스터링(`ST_ClusterDBSCAN`, `ST_SnapToGrid`), 트랜잭션, JSONB |
-| ORM/쿼리 | Drizzle ORM + 마이그레이션 SQL | 공간 쿼리는 SQL을 직접 쓴다 |
+| DB 접근 | `postgres`(postgres.js) + 순수 SQL 마이그레이션 | 공간 쿼리(PostGIS)가 많아 ORM 없이 SQL을 직접 쓴다 |
 | 웹 | **Next.js (App Router)** | 지도 화면은 클라이언트 렌더링. **공유 링크 페이지만 SSR**로 그려서 OG 태그와 미리보기를 지원한다 |
 | 모바일 | **Expo (React Native)** + Expo Router | 웹과 도메인·API 클라이언트·상태 관리를 공유한다. 지도처럼 네이티브가 필요한 부분은 Expo Native Module로 처리한다 |
 | 상태·캐시 | TanStack Query (웹·RN 공통) | 서버 상태 캐시, 낙관적 업데이트 |
-| 모바일 로컬 DB | expo-sqlite (+ Drizzle) | 오프라인 캐시와 대기 중인 변경(outbox) |
+| 모바일 로컬 DB (P1) | expo-sqlite | 오프라인 캐시와 대기 중인 변경(outbox) |
 | 인증 | 자체 발급 JWT(access) + 회전형 refresh 토큰 | 소셜(OIDC) 로그인을 붙이기 쉽고 공급자에 종속되지 않는다 |
 | 인프라 | AWS 서울 리전 (ECS Fargate + RDS PostgreSQL) 또는 NCP | 위치·개인정보를 국내에 보관한다 (법무 검토에 유리) |
 | 관측 | OpenTelemetry → Grafana/Sentry | |
 
 > 왜 Flutter나 순수 네이티브가 아닌가: "웹이 기본"이라는 요구 때문이다. React(웹)와 React Native(앱)가 같은 TS 패키지를 그대로 공유할 수 있어서다. 지도 SDK 래퍼처럼 꼭 네이티브여야 하는 부분만 Swift/Kotlin으로 작게 작성한다.
 
-## 3. 모노레포 구조 (pnpm workspace + Turborepo)
+## 3. 모노레포 구조 (pnpm workspace)
 
 ```
 mappin/
 ├─ api/openapi.yaml            # 단일 API 계약 (모든 클라이언트의 기준)
-├─ db/schema.sql               # 초기 스키마 (PostGIS)
+├─ db/migrations/              # 순서대로 적용되는 SQL 마이그레이션 (PostGIS)
 ├─ apps/
-│  ├─ server/                  # Fastify API
-│  ├─ web/                     # Next.js
-│  └─ mobile/                  # Expo (P1)
+│  ├─ server/                  # Fastify API + 통합 테스트
+│  ├─ web/                     # Next.js — 지도 어댑터는 src/map/{maplibre,kakao,pins}.ts
+│  └─ mobile/                  # Expo (P1, 아직 없음)
 ├─ packages/
-│  ├─ api-client/              # openapi.yaml로 생성한 타입·fetch 클라이언트 (openapi-typescript + openapi-fetch)
-│  ├─ domain/                  # 도메인 타입, 아이콘·색 결정 규칙, 필터 로직, 검증(Zod)
-│  ├─ map-core/                # MapProvider 어댑터 인터페이스 + 공통 클러스터링 (supercluster)
-│  └─ map-native/              # RN 어댑터 (Kakao/Naver/MapLibre) — P1
-│  (P0: 웹 어댑터는 apps/web/src/map/{maplibre,kakao,pins}.ts — 모바일 착수 시 패키지로 분리)
+│  ├─ api-client/              # openapi.yaml로 생성한 타입(openapi-typescript) + 가벼운 fetch 클라이언트
+│  └─ map-core/                # MapProvider/MapHandle 인터페이스, 공급자 선택·아이콘 결정 규칙
+├─ deploy/                     # 운영 설치 (Docker Compose · Caddy) — docs/08
+├─ scripts/                    # E2E, 로컬 실행, 데모 배경지도
 └─ docs/
 ```
+
+> 도메인 규칙은 별도 패키지 없이 `map-core`(아이콘 결정)와 서버에 둔다. 모바일(P1)을 시작할 때 RN 지도 어댑터(`map-native`)와 함께 공용 도메인 패키지 분리를 다시 판단한다.
 
 ## 4. 지도 어댑터 계층 (`packages/map-core`)
 
@@ -78,7 +79,7 @@ UI는 지도사 SDK를 직접 부르지 않는다. 모든 지도 동작은 `MapH
 | 항목 | 설계 |
 |---|---|
 | 방식 | 이메일+비밀번호(argon2id), 소셜: Google·Apple·Kakao·Naver (OIDC/OAuth2 + PKCE) |
-| 토큰 | Access JWT 15분 (EdDSA 서명, `sub`, `sid`) + Refresh 토큰 30일 (불투명 토큰, DB에는 해시만 저장, **사용할 때마다 회전**, 재사용이 감지되면 세션 전체 폐기) |
+| 토큰 | Access JWT 15분 (HS256 서명, `sub`, `sid` — 서비스를 여러 개로 나눠 검증해야 할 때 EdDSA 공개키 방식으로 전환) + Refresh 토큰 30일 (불투명 토큰, DB에는 해시만 저장, **사용할 때마다 회전**, 재사용이 감지되면 세션 전체 폐기) |
 | 웹 | Refresh 토큰은 `HttpOnly; Secure; SameSite=Lax` 쿠키에, Access 토큰은 메모리에 둔다. `/auth/refresh`는 쿠키 기반 + CSRF 토큰 |
 | 모바일 | Refresh 토큰은 iOS Keychain / Android Keystore(expo-secure-store)에, Access 토큰은 메모리에 둔다 |
 | 소셜 연결 | `auth_identities` 테이블로 계정 하나에 여러 로그인 수단을 연결한다 |

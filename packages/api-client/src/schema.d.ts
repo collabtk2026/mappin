@@ -729,7 +729,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 친구 목록 */
+        /** [P1 예정] 친구 목록 */
         get: operations["listFriends"];
         put?: never;
         post?: never;
@@ -746,10 +746,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 받은/보낸 친구 요청 */
+        /** [P1 예정] 받은/보낸 친구 요청 */
         get: operations["listFriendRequests"];
         put?: never;
-        /** 친구 요청 (handle 또는 이메일) */
+        /** [P1 예정] 친구 요청 (handle 또는 이메일) */
         post: operations["createFriendRequest"];
         delete?: never;
         options?: never;
@@ -766,7 +766,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 친구 요청 수락/거절 */
+        /** [P1 예정] 친구 요청 수락/거절 */
         post: operations["respondFriendRequest"];
         delete?: never;
         options?: never;
@@ -784,7 +784,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** 친구 삭제 (해당 사용자와의 공유도 회수 옵션) */
+        /** [P1 예정] 친구 삭제 (해당 사용자와의 공유도 회수 옵션) */
         delete: operations["deleteFriend"];
         options?: never;
         head?: never;
@@ -798,7 +798,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 변경 피드 (오프라인 캐시 동기화) */
+        /** [P1 예정] 변경 피드 (오프라인 캐시 동기화) */
         get: operations["getChanges"];
         put?: never;
         post?: never;
@@ -817,7 +817,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 오프라인 변경 일괄 업로드 */
+        /** [P1 예정] 오프라인 변경 일괄 업로드 */
         post: operations["pushMutations"];
         delete?: never;
         options?: never;
@@ -851,7 +851,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 가져오기 (GeoJSON/CSV/KML/GPX 업로드) */
+        /** [P1 예정] 가져오기 (GeoJSON/CSV/KML/GPX 업로드) */
         post: operations["createImport"];
         delete?: never;
         options?: never;

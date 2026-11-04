@@ -1,6 +1,6 @@
 # 04. 서비스 API 개요
 
-정식 계약은 [`api/openapi.yaml`](../api/openapi.yaml) (OpenAPI 3.1, 엔드포인트 64개)에 있다. 이 문서는 그 명세를 사람이 읽기 쉽게 요약한 것이다.
+정식 계약은 [`api/openapi.yaml`](../api/openapi.yaml) (OpenAPI 3.1, 엔드포인트 65개 — 친구·동기화·가져오기 8개는 P1 예정으로 `x-status: planned` 표시)에 있다. 이 문서는 그 명세를 사람이 읽기 쉽게 요약한 것이다.
 검증 명령: `npx @redocly/cli lint api/openapi.yaml`
 
 ## 1. 공통 규약
@@ -32,9 +32,9 @@
 | **Map** | `GET /map/config?platform=` (지역별 공급자와 키) · `GET /map/clusters?bbox&zoom` |
 | **Geo** | `GET /geo/search?q&near` · `GET /geo/reverse?lat&lng` · `GET /geo/provider-place/{provider}/{id}` — 응답을 **저장하지 않는** 실시간 프록시 |
 | **Sharing** | `GET/POST /shares` · `PATCH/DELETE /shares/{id}` · `POST /shares/{id}/rotate-link` · `POST /shares/{id}/accept` · `GET /shared-with-me` · `GET /public/shares/{token}` (로그인 없이 열람) |
-| **Friends** | `GET /friends` · `GET/POST /friends/requests` · `POST /friends/requests/{userId}/{accept\|decline}` · `DELETE /friends/{userId}` |
-| **Sync** | `GET /sync/changes?cursor` · `POST /sync/push` |
-| **Export** | `POST /export` · `POST /import` · `GET /jobs/{id}` |
+| **Friends** (P1 예정) | `GET /friends` · `GET/POST /friends/requests` · `POST /friends/requests/{userId}/{accept\|decline}` · `DELETE /friends/{userId}` |
+| **Sync** (P1 예정) | `GET /sync/changes?cursor` · `POST /sync/push` |
+| **Export** | `POST /export` · `POST /import`(P1 예정, 현재 501) · `GET /jobs/{id}` · `GET /jobs/{id}/download` |
 
 ## 3. 핵심 흐름
 
@@ -84,7 +84,7 @@ POST /shares { target_type:'category', target_id, grantee:{type:'link'} }
 
 | 클라이언트 | 도구 | 산출물 |
 |---|---|---|
-| Web / React Native | `openapi-typescript` + `openapi-fetch` | `packages/api-client` (타입 안전 fetch, 웹·RN 공용) |
+| Web / React Native | `openapi-typescript` + 자체 fetch 래퍼 | `packages/api-client` (타입 + fetch 클라이언트, 웹·RN 공용) |
 | iOS 네이티브 (선택) | `swift-openapi-generator` | Swift Package |
 | Android 네이티브 (선택) | `openapi-generator -g kotlin` (Retrofit/Ktor) | Gradle 모듈 |
 | 서버 | Zod 스키마 ↔ OpenAPI 비교 테스트 (CI) | 명세와 구현이 어긋나면 빌드 실패 |
