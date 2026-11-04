@@ -3,7 +3,10 @@
 > 이 문서는 **다른 AI 모델이나 개발자가 이 문서만 읽고 이어서 작업할 수 있도록** 쓴 것이다. 지금까지 한 일, 앞으로 할 일, 점검할 것을 담는다.
 > 문서 목록: [README](README.md) · [작업 로그](LOG.md) · [전체 개요](OVERVIEW.md)
 >
-> 마지막 갱신: 2026-11-03 · **독립 저장소**(BgPlay만, 기본 브랜치 `main`). 2026-11-03에 `collabtk2026/mappin`의 `bgplay/` 디렉터리(브랜치 `ccr-94ee0a85-9h95lk`)에서 `git subtree split`으로 분리했다. Mappin과는 무관하다.
+> 마지막 갱신: 2026-11-04 · **보관 위치: `collabtk2026/mappin` 저장소의 **`bgplay-main` 브랜치**(BgPlay만 담긴 독립 이력. Mappin 브랜치들과 공통 조상이 없음)**. 받기: `git clone -b bgplay-main --single-branch https://github.com/collabtk2026/mappin bgplay`.
+> **이후 BgPlay 작업은 이 브랜치(또는 여기서 딴 브랜치)에서 한다.** Mappin 작업 브랜치에는 BgPlay 코드가 없다.
+>
+> 이력:  2026-11-03에 `collabtk2026/mappin`의 `bgplay/` 디렉터리(브랜치 `ccr-94ee0a85-9h95lk`)에서 `git subtree split`으로 분리했다. Mappin과는 무관하다.
 
 ---
 
@@ -186,7 +189,8 @@ SDK 없이 Kotlin 문법·타입만 검사하는 방법(이번 환경에서 쓴 
 | T-15 | 중복 저장 시 `saveCount`/저장 시각 갱신, 저장 시점 재생 위치 기억 | `core.js`(`quickSave`), `trackToItem` | 테스트 추가 | ☐ |
 | T-16 | 주간 "임시함 정리" 알림 | Android WorkManager 또는 AlarmManager, iOS UNUserNotification | 설정에서 켜고 끄기 | ☐ |
 | T-17 | iOS AppIcon, 실기기 스크린샷(E-09) | `ios/BgPlay/Assets.xcassets`, `project.yml`, `DOCS/images` | 빌드 경고 없음 | ☐ |
-| T-18 | 독립 저장소 분리(로컬 완료) → **영구 원격 저장소 지정과 push**, Mappin 쪽 `bgplay/` 정리 여부 결정 | — | 원격 저장소에 `main` push, Mappin 쪽은 안내만 남김 | ◐ |
+| T-18 | 독립 저장소 분리와 보관 | — | `bgplay-main` 브랜치에 push, Mappin 작업 브랜치에서 `bgplay/` 제거 후 안내만 남김 | ✅ LOG #6 |
+| T-19 | (선택) 별도 GitHub 저장소로 이전 | 사용자가 빈 저장소를 만든 뒤 | `git push <새 저장소> bgplay-main:main` | ☐ |
 
 ### 6.3 스토어 트랙 (`store` 빌드 — 근거: STORE_RELEASE §3·§5·§6)
 

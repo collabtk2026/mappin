@@ -79,4 +79,4 @@ bgplay/  (저장소 루트)
 3. iOS 잠금화면 저장(`bookmarkCommand`), Share Extension.
 4. Android PiP.
 5. 자동 로컬 백업, 휴지통.
-6. ~~독립 저장소로 분리~~ → 완료(2026-11-03, LOG #5). 영구 원격 저장소 지정은 HANDOFF T-18.
+6. ~~독립 저장소로 분리~~ → 완료. `collabtk2026/mappin`의 `bgplay-main` 브랜치에 보관(LOG #5·#6). 별도 GitHub 저장소 이전은 선택(HANDOFF T-19).

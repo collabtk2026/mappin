@@ -1,3 +1,6 @@
+> **보관 위치**: `collabtk2026/mappin` 저장소의 **`bgplay-main` 브랜치**(BgPlay만 담긴 독립 이력. Mappin 브랜치들과 공통 조상이 없음).
+> 받기: `git clone -b bgplay-main --single-branch https://github.com/collabtk2026/mappin bgplay`
+>
 > **독립 저장소**: 이 저장소는 BgPlay만 담고 있습니다. 2026-11-03에 `collabtk2026/mappin` 저장소의 `bgplay/` 디렉터리에서 커밋 이력째 분리했습니다([DOCS/LOG.md](DOCS/LOG.md) #5). Mappin(지도 앱)과는 무관합니다.
 
 # BgPlay — 백그라운드 재생 + 빠른 저장 YouTube / YouTube Music 플레이어 (Android · iOS)

@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-11-04 #6 — 보관 위치 확정: `bgplay-main` 브랜치
+
+**요청(선택)**: 사용자가 독립 저장소의 보관 위치로 "mappin 저장소의 별도 브랜치"를 선택함. Mappin 쪽 `bgplay/` 정리는 "선호 없음" → 권장안(제거 후 안내만 남김)을 적용.
+
+**한 일**
+- 독립 저장소(`main`, BgPlay만 담은 이력)를 `collabtk2026/mappin`의 **`bgplay-main`** 브랜치로 push함.
+- README, HANDOFF, ENV_PENDING, OVERVIEW에 보관 위치와 받는 방법을 적음. 백로그: T-18 완료, T-19(별도 저장소 이전, 선택) 추가.
+- Mappin 작업 브랜치(`ccr-94ee0a85-9h95lk`)에서 `bgplay/` 디렉터리를 제거하고, 루트 README에 이전 안내만 남김.
+
+**받기**: `git clone -b bgplay-main --single-branch https://github.com/collabtk2026/mappin bgplay`
+
+---
+
 ## 2026-11-03 #5 — Mappin 저장소에서 BgPlay 분리
 
 **요청**: 저장소를 "Mappin"이라는 다른 앱과 같이 쓰고 있어 헷갈리므로, BgPlay 관련 내용만 따로 저장할 것.
