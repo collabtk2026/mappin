@@ -16,7 +16,10 @@
 
 **검증**: 이 저장소에서 `node shared/test/bgplay.test.mjs` 12/12, `library.test.mjs` 18/18. Info.plist와 strings.xml 형식 확인. 문서 링크 검사 통과. Android/iOS 빌드는 여전히 불가(ENV_PENDING).
 
-**push**: 아래 "push" 줄 참고.
+**push**
+- `collabtk2026/youplay`로의 push는 **거부됨**(HTTP 403). 이 저장소에 Claude GitHub App이 설치돼 있지 않음.
+- 해결 방법: https://claude.ai/connect-github 에서 GitHub를 다시 연결하고, youplay 저장소에 Claude GitHub App을 설치(조직 소유자 권한 필요). 그 뒤 `git push -u origin main`.
+- 그때까지는 같은 커밋을 `collabtk2026/mappin`의 `bgplay-main` 브랜치에 임시로 보관함(빨리 감기 push). 접근이 해결되면 youplay `main`이 정본이다.
 
 ---
 
