@@ -2,7 +2,7 @@
 
 ![Mappin](docs/screenshots/04-map-list.png)
 
-> 참고: 별개 프로젝트 **BgPlay**(YouTube 백그라운드 재생 앱)는 Mappin과 무관하며, 이 저장소의 **`bgplay-main` 브랜치**(독립 이력)로 옮겼습니다. 받기: `git clone -b bgplay-main --single-branch https://github.com/collabtk2026/mappin bgplay`
+> 참고: 별개 프로젝트 **Youplay**(구 BgPlay, YouTube 백그라운드 재생 앱)는 Mappin과 무관하며 독립 저장소 [`collabtk2026/youplay`](https://github.com/collabtk2026/youplay)로 옮겼습니다. 이 저장소의 `bgplay-main` 브랜치는 과거 보관용입니다.
 
 내가 저장한 장소(POI)와 그곳에 쌓인 기록(메모 히스토리, 태그, 아이콘, 카테고리)을 지도 위에서 다시 보고, 지인과 공유하는 서비스.
 **웹 우선**으로 만들고, 같은 API와 도메인 모델로 **iOS·Android**까지 확장한다.
