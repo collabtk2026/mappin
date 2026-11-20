@@ -1,0 +1,6 @@
+# 셸 스크립트·Caddyfile·SQL은 OS와 관계없이 LF 유지 (Windows에서 CRLF로 바뀌면 실행 실패)
+*.sh text eol=lf
+Caddyfile text eol=lf
+*.sql text eol=lf
+*.png binary
+*.woff2 binary
