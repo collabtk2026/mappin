@@ -24,6 +24,9 @@ export const maplibreProvider: MapProvider<HTMLElement> & { setStyle?(h: MapHand
       fadeDuration: 150,
     });
     map.touchZoomRotate.disableRotation();
+    // 라벨 현지화: OpenMapTiles 기본 "영문 + 현지어" 2줄 표기를 사용자 언어 우선 1줄로 (없으면 현지 이름)
+    const lang = (opts.locale ?? 'ko').split('-')[0];
+    map.on('style.load', () => localizeLabels(map, lang));
     // 스타일 로딩 실패(예: 다크 스타일 미제공) 시 기본 스타일로 대체
     let fellBack = false;
     map.on('error', (e: any) => {
@@ -105,6 +108,14 @@ export const maplibreProvider: MapProvider<HTMLElement> & { setStyle?(h: MapHand
         el.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#3366FF;border:3px solid #fff;box-shadow:0 0 0 6px rgba(51,102,255,.2)';
         userDot = new ml.Marker({ element: el }).setLngLat([p.lng, p.lat]).addTo(map);
       },
+      project(p) {
+        const pt = map.project([p.lng, p.lat]);
+        return { x: pt.x, y: pt.y };
+      },
+      unproject(pt) {
+        const ll = map.unproject([pt.x, pt.y]);
+        return { lat: ll.lat, lng: ll.lng };
+      },
       on(event, h) {
         (handlers[event] as Set<any>).add(h);
         return () => (handlers[event] as Set<any>).delete(h);
@@ -120,3 +131,13 @@ export const maplibreProvider: MapProvider<HTMLElement> & { setStyle?(h: MapHand
     (h as any)._map?.setStyle(url);
   },
 };
+
+/** text-field가 name:latin/name:nonlatin 조합인 라벨 레이어를 `name:<lang>` → `name` 순서로 바꾼다 */
+export function localizeLabels(map: MLMap, lang: string) {
+  const field = ['coalesce', ['get', `name:${lang}`], ['get', 'name'], ['get', 'name:latin']];
+  for (const layer of map.getStyle()?.layers ?? []) {
+    if (layer.type !== 'symbol') continue;
+    const tf = map.getLayoutProperty(layer.id, 'text-field');
+    if (tf && JSON.stringify(tf).includes('name:latin')) map.setLayoutProperty(layer.id, 'text-field', field as any);
+  }
+}

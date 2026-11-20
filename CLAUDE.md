@@ -32,4 +32,5 @@
 - 서버: `pnpm --filter @mappin/server test` (`TEST_DATABASE_URL`에 PostGIS DB 필요)
 - 타입: `pnpm typecheck`
 - 브라우저 E2E: 서버를 띄운 뒤 `pnpm e2e` (네트워크가 막힌 환경에서는 `pnpm demo:basemap` + `MAP_STYLE=demo`)
-- 로컬 실행: `scripts/serve-local.sh` (빌드된 웹 + API)
+- 지도 매핑: 서버를 `MAP_STYLE=openfreemap`으로 띄운 뒤 `pnpm verify:map` (실제 타일·지오코딩 필요. 핀 위치·저장 좌표·주소·검색·한글 라벨·다크 스타일)
+- 로컬 실행: `scripts/serve-local.sh` (빌드된 웹 + API). 클라우드 세션처럼 HTTP 프록시를 거쳐야 하는 곳에서는 `NODE_USE_ENV_PROXY=1`(+ 프록시 CA는 `NODE_EXTRA_CA_CERTS`)을 붙여야 서버가 지오코딩 서버에 닿습니다

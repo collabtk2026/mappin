@@ -68,6 +68,9 @@ export interface MapHandle {
   setMarkers(markers: readonly MarkerSpec[]): void;
   /** 내 위치 점 표시 (권한 획득은 앱 레이어 책임) */
   setUserLocation(position: LatLng | null, accuracyM?: number): void;
+  /** 지도 좌표 ↔ 화면 픽셀 (지도 컨테이너 기준) */
+  project(position: LatLng): { x: number; y: number };
+  unproject(point: { x: number; y: number }): LatLng;
   on<E extends keyof MapEvents>(event: E, handler: (e: MapEvents[E]) => void): Unsubscribe;
   destroy(): void;
 }

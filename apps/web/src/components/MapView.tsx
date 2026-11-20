@@ -50,6 +50,8 @@ export function MapView(p: Props) {
       .then((h) => {
         if (disposed) return h.destroy();
         handle.current = h;
+        // 지도 검증용 (scripts/verify-map.mjs): ?debug=map 일 때만 노출
+        if (new URLSearchParams(location.search).get('debug') === 'map') (window as any).__mappinMap = h;
         h.on('cameraIdle', (e) => cb.current.onCameraIdle?.(e));
         h.on('click', (e) => cb.current.onClick?.(e));
         h.on('longPress', (e) => cb.current.onLongPress?.(e));

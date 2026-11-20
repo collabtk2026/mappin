@@ -139,6 +139,7 @@ docker compose start api
 | 지도가 회색으로만 보임 | 서버나 휴대폰에서 `tiles.openfreemap.org`에 접속이 막혔을 수 있습니다. 사내망이라면 방화벽을 확인하세요 |
 | '새 장소 찾기' 검색 실패 | 키가 없으면 OpenStreetMap(Nominatim) 공개 서버를 씁니다. 사용 정책상 초당 1회 수준만 허용되므로 실사용은 카카오 키를 권장합니다 |
 | 메모리 부족으로 빌드 실패 | swap을 추가하세요: `sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile` |
+| 주소가 비어 있고 '새 장소 찾기'가 실패함 (사내망 등 HTTP 프록시 환경) | Node.js 서버는 기본적으로 프록시 환경변수를 따르지 않습니다. `deploy/docker-compose.yml`의 `api` 서비스에 `HTTPS_PROXY`와 `NODE_USE_ENV_PROXY: "1"`을 추가하세요 (프록시 인증서가 따로 있다면 `NODE_EXTRA_CA_CERTS`도) |
 | "요청이 너무 많아요" (429) | 같은 IP 기준으로 로그인 관련은 분당 20회, 검색은 60회, 일반 API는 300회로 제한합니다 |
 
 ## 6. 이미 nginx 같은 웹서버가 80/443을 쓰고 있다면

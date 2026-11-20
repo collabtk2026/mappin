@@ -116,20 +116,30 @@ export class NominatimGeo implements GeoProvider {
     };
   }
   async reverse(lat: number, lng: number): Promise<GeoAddress | null> {
-    const r = await this.get('/reverse', { lat: String(lat), lon: String(lng), addressdetails: '1' });
+    const r = await this.get('/reverse', { lat: String(lat), lon: String(lng), addressdetails: '1', zoom: '18' });
     if (!r?.address) return null;
-    const a = r.address;
-    return {
-      road: r.display_name ?? null,
-      jibun: null,
-      postal_code: a.postcode ?? null,
-      region_1: a.state ?? a.city ?? null,
-      region_2: a.city_district ?? a.borough ?? a.county ?? null,
-      region_3: a.quarter ?? a.suburb ?? a.neighbourhood ?? null,
-      country_code: a.country_code ? String(a.country_code).toUpperCase() : null,
-      source: 'osm',
-    };
+    return nominatimAddress(r.address);
   }
+}
+
+/** Nominatim 주소 요소 → 큰 단위부터 쓰는 한국식 표기 (display_name은 작은 단위부터라 쓰지 않는다) */
+export function nominatimAddress(a: Record<string, string>): GeoAddress {
+  const region1 = a.province ?? a.state ?? a.city ?? null;
+  const city = a.city && a.city !== region1 ? a.city : null;
+  const region2 = a.borough ?? a.city_district ?? a.county ?? a.town ?? null;
+  const region3 = a.quarter ?? a.suburb ?? a.neighbourhood ?? a.village ?? null;
+  const join = (...xs: (string | null | undefined)[]) => xs.filter(Boolean).join(' ') || null;
+  const road = a.road ? join(region1, city, region2, a.road, a.house_number) : null;
+  return {
+    road,
+    jibun: join(region1, city, region2, region3),
+    postal_code: a.postcode ?? null,
+    region_1: region1,
+    region_2: region2,
+    region_3: region3,
+    country_code: a.country_code ? a.country_code.toUpperCase() : null,
+    source: 'osm',
+  };
 }
 
 export function deeplinkFor(provider: string, externalId: string): string | null {

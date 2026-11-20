@@ -101,6 +101,14 @@ export const kakaoProvider: MapProvider<HTMLElement> = {
         userDot = new k.CustomOverlay({ position: new k.LatLng(p.lat, p.lng), content: el });
         userDot.setMap(map);
       },
+      project(p) {
+        const pt = map.getProjection().containerPointFromCoords(new k.LatLng(p.lat, p.lng));
+        return { x: pt.x, y: pt.y };
+      },
+      unproject(pt) {
+        const ll = map.getProjection().coordsFromContainerPoint(new k.Point(pt.x, pt.y));
+        return { lat: ll.getLat(), lng: ll.getLng() };
+      },
       on(event, h) {
         (handlers[event] as Set<any>).add(h);
         return () => (handlers[event] as Set<any>).delete(h);

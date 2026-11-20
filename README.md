@@ -89,6 +89,12 @@ API 서버 통합 테스트 (PostGIS DB 필요, `TEST_DATABASE_URL`):
 pnpm --filter @mappin/server test
 ```
 
+지도 매핑 검증 (실제 타일·지오코딩, 서버가 떠 있는 상태):
+
+```bash
+pnpm verify:map
+```
+
 브라우저 E2E (서버가 떠 있는 상태):
 
 ```bash
